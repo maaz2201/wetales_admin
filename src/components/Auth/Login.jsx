@@ -7,7 +7,7 @@ import { Visibility, VisibilityOff, Email, Lock, AdminPanelSettings } from '@mui
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-const BASE_URL = process.env.REACT_APP_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;;
 
 function Login() {
   const [credentials, setCredentials] = useState({ email: '', password: '' });

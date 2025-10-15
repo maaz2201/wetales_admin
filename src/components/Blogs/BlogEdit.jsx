@@ -38,11 +38,11 @@ import {
   ExpandMore,
 } from "@mui/icons-material";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;;
 // or fallback: process.env.REACT_APP_API_URL || "your-default"
 
 // const SERVER_BASE_URL = "http://localhost:5000";
-const SERVER_BASE_URL = process.env.REACT_APP_API_URL_SERVER;
+const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER;
 // or fallback: process.env.REACT_APP_API_URL || "your-default"
 
 const MenuBar = ({ editor }) => {
