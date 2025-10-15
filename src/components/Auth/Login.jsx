@@ -44,6 +44,7 @@ function Login() {
     localStorage.removeItem('tokenExpiry');
     localStorage.removeItem('user');
   };
+console.log('API URL:', BASE_URL);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
