@@ -38,7 +38,7 @@ import {
   ExpandMore,
 } from "@mui/icons-material";
 
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = process.env.REACT_APP_API_URL;
 
 const MenuBar = ({ editor }) => {
   if (!editor) return null;

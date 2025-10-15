@@ -21,7 +21,9 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
-const BASE_URL = 'http://localhost:5000/api';
+// const BASE_URL = 'http://localhost:5000/api';
+
+const BASE_URL = process.env.REACT_APP_API_URL;
 
 const containerVariants = {
   hidden: { opacity: 0 },
