@@ -13,70 +13,358 @@ import {
   MenuItem,
   Stack,
   IconButton,
-  Tooltip,
   Divider,
   Grid,
   CircularProgress,
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { motion } from "framer-motion";
 import axios from "axios";
 import {
-  FormatBold,
-  FormatItalic,
-  FormatStrikethrough,
-  Title,
-  FormatListBulleted,
-  FormatListNumbered,
-  FormatQuote,
   PhotoCamera,
   ExpandMore,
+  Title,
+  Notes,
+  FormatQuote,
+  ArrowUpward,
+  ArrowDownward,
+  Delete,
+  OndemandVideo,
 } from "@mui/icons-material";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;;
-// or fallback: process.env.REACT_APP_API_URL || "your-default"
+const BASE_URL = import.meta.env.VITE_API_URL;
+const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER; // Correctly referencing SERVER_BASE_URL
 
-// const SERVER_BASE_URL = "http://localhost:5000";
-const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER;
-// or fallback: process.env.REACT_APP_API_URL || "your-default"
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0 },
+};
 
-const MenuBar = ({ editor }) => {
-  if (!editor) return null;
-  const menuItems = [
-    { action: () => editor.chain().focus().toggleBold().run(), icon: FormatBold, label: "Bold", active: editor.isActive("bold") },
-    { action: () => editor.chain().focus().toggleItalic().run(), icon: FormatItalic, label: "Italic", active: editor.isActive("italic") },
-    { action: () => editor.chain().focus().toggleStrike().run(), icon: FormatStrikethrough, label: "Strike", active: editor.isActive("strike") },
-    { type: "divider" },
-    { action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), icon: Title, label: "H2", active: editor.isActive("heading", { level: 2 }) },
-    { action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), icon: Title, label: "H3", active: editor.isActive("heading", { level: 3 }), sx: { transform: "scale(0.8)" } },
-    { type: "divider" },
-    { action: () => editor.chain().focus().toggleBulletList().run(), icon: FormatListBulleted, label: "Bullet List", active: editor.isActive("bulletList") },
-    { action: () => editor.chain().focus().toggleOrderedList().run(), icon: FormatListNumbered, label: "Numbered List", active: editor.isActive("orderedList") },
-    { action: () => editor.chain().focus().toggleBlockquote().run(), icon: FormatQuote, label: "Blockquote", active: editor.isActive("blockquote") },
-  ];
+// --- Block Components ---
+// --- Block Components ---
+const ParagraphBlock = ({ value, onChange }) => (
+  <TextField
+    fullWidth
+    multiline
+    variant="standard"
+    placeholder="Start writing a paragraph..."
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    InputProps={{
+      disableUnderline: true,
+      style: { fontSize: "1.1rem", lineHeight: 1.8 },
+    }}
+  />
+);
+const HeadingBlock = ({ value, onChange }) => (
+  <TextField
+    fullWidth
+    variant="standard"
+    placeholder="Enter a heading..."
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    InputProps={{
+      disableUnderline: true,
+      style: {
+        fontSize: "2rem",
+        fontWeight: 700,
+        fontFamily: "'Playfair Display', serif",
+        color: "#4a148c",
+      },
+    }}
+  />
+);
+const QuoteBlock = ({ value, onChange }) => (
+  <TextField
+    fullWidth
+    multiline
+    variant="standard"
+    placeholder="Enter a quote..."
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    InputProps={{
+      disableUnderline: true,
+      style: {
+        fontSize: "1.5rem",
+        fontStyle: "italic",
+        color: "#666",
+        borderLeft: "4px solid #ab47bc",
+        paddingLeft: "16px",
+      },
+    }}
+  />
+);
+
+const ImageBlock = ({ value, onChange, onUpload }) => {
+  const [imagePreview, setImagePreview] = useState("");
+
+  // --- DEBUGGING START ---
+  console.log("ImageBlock: value.src received:", value.src);
+  console.log("ImageBlock: SERVER_BASE_URL:", SERVER_BASE_URL);
+  // --- DEBUGGING END ---
+
+  useEffect(() => {
+    if (value.src) {
+      const newPreview = value.src.startsWith("data:image")
+        ? value.src
+        : `${SERVER_BASE_URL}${value.src}`; // Ensure SERVER_BASE_URL is not undefined
+      setImagePreview(newPreview);
+      // --- DEBUGGING START ---
+      console.log("ImageBlock: useEffect setting imagePreview to:", newPreview);
+      // --- DEBUGGING END ---
+    } else {
+      setImagePreview("");
+      // --- DEBUGGING START ---
+      console.log("ImageBlock: useEffect clearing imagePreview.");
+      // --- DEBUGGING END ---
+    }
+  }, [value.src, SERVER_BASE_URL]);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result); // Show local preview
+    reader.readAsDataURL(file);
+
+    const imageUrl = await onUpload(file, "image");
+    if (imageUrl) {
+      onChange({ src: imageUrl, caption: value.caption || "" });
+      // The useEffect will handle updating the preview with the final server URL
+    }
+  };
 
   return (
-    <Paper elevation={0} sx={{ display: "flex", flexWrap: "wrap", p: 1, borderBottom: "1px solid #ddd", borderRadius: "4px 4px 0 0" }}>
-      {menuItems.map((item, index) =>
-        item.type === "divider" ? (<Divider key={index} orientation="vertical" flexItem sx={{ mx: 1, my: 0.5 }} />) : (
-          <Tooltip key={item.label} title={item.label}>
-            <IconButton onClick={item.action} size="small" sx={{ color: item.active ? "primary.main" : "text.secondary", backgroundColor: item.active ? "rgba(171, 71, 188, 0.1)" : "transparent" }}>
-              <item.icon sx={item.sx} />
-            </IconButton>
-          </Tooltip>
-        )
+    <Stack spacing={2} alignItems="center">
+      {imagePreview ? (
+        <img
+          src={imagePreview}
+          alt={value.caption || "blog image"}
+          style={{ maxWidth: "100%", borderRadius: "8px" }}
+        />
+      ) : (
+        <Button
+          variant="outlined"
+          component="label"
+          startIcon={<PhotoCamera />}
+        >
+          Upload Image
+          <input
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+        </Button>
       )}
-    </Paper>
+      <TextField
+        fullWidth
+        variant="standard"
+        placeholder="Add an optional caption..."
+        value={value.caption || ""}
+        onChange={(e) => onChange({ ...value, caption: e.target.value })}
+        size="small"
+        sx={{ textAlign: "center" }}
+      />
+    </Stack>
   );
 };
 
-const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
-const itemVariants = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } };
+const VideoBlock = ({ value, onChange, onUpload }) => {
+  const [tab, setTab] = useState(value.type || "embed");
+  const [uploading, setUploading] = useState(false);
+  const [videoPreview, setVideoPreview] = useState("");
+
+  // --- DEBUGGING START ---
+  console.log("VideoBlock: value.src received:", value.src);
+  console.log("VideoBlock: value.type received:", value.type);
+  console.log("VideoBlock: SERVER_BASE_URL:", SERVER_BASE_URL);
+  // --- DEBUGGING END ---
+
+  useEffect(() => {
+    if (value.type === "upload" && value.src) {
+      const newPreview = value.src.startsWith("data:video")
+        ? value.src
+        : `${SERVER_BASE_URL}${value.src}`; // Ensure SERVER_BASE_URL is not undefined
+      setVideoPreview(newPreview);
+      // --- DEBUGGING START ---
+      console.log("VideoBlock: useEffect setting videoPreview to:", newPreview);
+      // --- DEBUGGING END ---
+    } else {
+      setVideoPreview("");
+      // --- DEBUGGING START ---
+      console.log("VideoBlock: useEffect clearing videoPreview.");
+      // --- DEBUGGING END ---
+    }
+    if (value.type && value.type !== tab) {
+      setTab(value.type);
+      // --- DEBUGGING START ---
+      console.log("VideoBlock: useEffect setting tab to:", value.type);
+      // --- DEBUGGING END ---
+    }
+  }, [value.src, value.type, SERVER_BASE_URL, tab]);
+
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    let videoId = "";
+    if (url.includes("youtube.com/watch?v=")) {
+      videoId = url.split("v=")[1].split("&")[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    if (url.includes("youtu.be/")) {
+      videoId = url.split("/").pop();
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    if (url.includes("vimeo.com/")) {
+      videoId = url.split("/").pop();
+      return `https://player.vimeo.com/video/${videoId}`;
+    }
+    return null;
+  };
+
+  const embedUrl = value.type === "embed" ? getEmbedUrl(value.src) : null;
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+
+    const reader = new FileReader();
+    reader.onloadend = () => setVideoPreview(reader.result); // Show local preview
+    reader.readAsDataURL(file);
+
+    const videoUrl = await onUpload(file, "video");
+    if (videoUrl) {
+      onChange({ src: videoUrl, type: "upload" });
+      // The useEffect will handle updating the preview with the final server URL
+    }
+    setUploading(false);
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Tabs
+        value={tab}
+        onChange={(e, newTab) => {
+          setTab(newTab);
+          onChange({ src: "", type: newTab }); // Clear src when changing tab type
+        }}
+        centered
+      >
+        <Tab label="Embed URL" value="embed" />
+        <Tab label="Upload Video" value="upload" />
+      </Tabs>
+      {tab === "embed" && (
+        <TextField
+          fullWidth
+          label="Video URL (YouTube or Vimeo)"
+          value={value.type === "embed" ? value.src : ""}
+          onChange={(e) => onChange({ src: e.target.value, type: "embed" })}
+          placeholder="Paste your video link here..."
+        />
+      )}
+      {tab === "upload" && (
+        <Box sx={{ textAlign: "center" }}>
+          <Button variant="outlined" component="label" disabled={uploading}>
+            {uploading ? <CircularProgress size={24} /> : "Select Video File"}
+            <input
+              type="file"
+              hidden
+              accept="video/*"
+              onChange={handleVideoUpload}
+            />
+          </Button>
+        </Box>
+      )}
+      {value.type === "embed" && embedUrl ? (
+        <Box
+          sx={{
+            position: "relative",
+            paddingTop: "56.25%",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
+          <iframe
+            src={embedUrl}
+            frameBorder="0"
+            allowFullScreen
+            title="Embedded video"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </Box>
+      ) : (
+        value.type === "upload" &&
+        videoPreview && (
+          <video
+            src={videoPreview}
+            controls
+            style={{ width: "100%", borderRadius: "8px" }}
+          />
+        )
+      )}
+    </Stack>
+  );
+};
+
+const SERPPreview = ({ title, description }) => (
+  <Box
+    sx={{
+      p: 2,
+      border: "1px solid #ddd",
+      borderRadius: 1,
+      bgcolor: "#fff",
+      fontSize: "0.9rem",
+    }}
+  >
+    <Typography
+      variant="body2"
+      sx={{
+        color: "#1a0dab",
+        fontSize: "18px",
+        textDecoration: "underline",
+        whiteWhiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {title || "Your Blog Title Will Appear Here"}
+    </Typography>
+    <Typography variant="body2" sx={{ color: "#006621", fontSize: "14px" }}>
+      https://www.wetales.in/blog/your-slug
+    </Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "#545454",
+        fontSize: "14px",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        display: "-webkit-box",
+        WebkitLineClamp: "2",
+        WebkitBoxOrient: "vertical",
+      }}
+    >
+      {description || "Your SEO description will appear here."}
+    </Typography>
+  </Box>
+);
 
 export default function BlogEdit() {
   const { id } = useParams();
@@ -90,108 +378,172 @@ export default function BlogEdit() {
     seoDescription: "",
     featuredImage: "",
   });
+  const [contentBlocks, setContentBlocks] = useState([]);
   const [tagInput, setTagInput] = useState("");
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [featuredImageFile, setFeaturedImageFile] = useState(null);
+  const [featuredImagePreview, setFeaturedImagePreview] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: "",
-  });
-
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-    const fetchBlog = async () => {
-      try {
-        const { data } = await axios.get(`${API_BASE_URL}/blogs/${id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        setFormData({
-          title: data.title || '',
-          excerpt: data.excerpt || '',
-          category: data.category || '',
-          tags: data.tags || [],
-          status: data.status || 'draft',
-          seoTitle: data.seoTitle || '',
-          seoDescription: data.seoDescription || '',
-          featuredImage: data.featuredImage || '',
-        });
-        if (data.featuredImage) {
-          setImagePreview(`${SERVER_BASE_URL}${data.featuredImage}`);
-        }
-        if (editor) {
-          editor.commands.setContent(data.content || '');
-        }
-      } catch (err) {
-        setError('Failed to load blog post.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (editor) {
-        fetchBlog();
-    }
-  }, [id, token, navigate, editor]);
 
+    // Only attempt to fetch blog data if an ID is present in the URL params
+    if (id) {
+      const fetchBlog = async () => {
+        try {
+          const { data } = await axios.get(`${BASE_URL}/blogs/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          console.log("Fetched blog data:", data);
+          setFormData({
+            title: data.title || "",
+            excerpt: data.excerpt || "",
+            category: data.category || "",
+            tags: data.tags || [],
+            status: data.status || "draft",
+            seoTitle: data.seoTitle || "",
+            seoDescription: data.seoDescription || "",
+            featuredImage: data.featuredImage || "",
+          });
+          setContentBlocks(data.contentBlocks || []);
+          if (data.featuredImage) {
+            setFeaturedImagePreview(`${SERVER_BASE_URL}${data.featuredImage}`);
+          }
+        } catch (err) {
+          console.error("Error fetching blog post:", err);
+          setError("Failed to load blog post.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBlog();
+    } else {
+      // If no ID is present, this is not a valid edit page.
+      // Set loading to false and potentially redirect or show an error.
+      setLoading(false);
+      setError(
+        "Invalid blog post ID for editing. Please select a post to edit."
+      );
+      // You might want to redirect the user to the blog list or a creation page.
+      // navigate("/admin/blogs");
+    }
+  }, [id, token, navigate]);
+
+  const handleBlockChange = (index, newValue) => {
+    const newBlocks = [...contentBlocks];
+    newBlocks[index].value = newValue;
+    setContentBlocks(newBlocks);
+  };
+  const addBlock = (type) => {
+    let defaultValue = "";
+    if (type === "image") defaultValue = { src: "", caption: "" };
+    if (type === "video") defaultValue = { src: "", type: "embed" };
+    setContentBlocks([...contentBlocks, { type, value: defaultValue }]);
+  };
+  const moveBlock = (index, direction) => {
+    const newBlocks = [...contentBlocks];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
+    [newBlocks[index], newBlocks[targetIndex]] = [
+      newBlocks[targetIndex],
+      newBlocks[index],
+    ];
+    setContentBlocks(newBlocks);
+  };
+  const deleteBlock = (index) => {
+    const newBlocks = contentBlocks.filter((_, i) => i !== index);
+    setContentBlocks(newBlocks);
+  };
+
+  const uploadFile = async (file, fileType = "image") => {
+    const uploadFormData = new FormData();
+    uploadFormData.append(fileType, file);
+    try {
+      const { data } = await axios.post(
+        `${BASE_URL}/upload/${fileType}`,
+        uploadFormData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return data.data.filePath;
+    } catch (err) {
+      setError(
+        `${fileType.charAt(0).toUpperCase() + fileType.slice(1)} upload failed.`
+      );
+      console.error(`Error uploading ${fileType}:`, err);
+      return null;
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const handleImageChange = (e) => {
+  const handleFeaturedImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
+      setFeaturedImageFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
+      reader.onloadend = () => setFeaturedImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+
+  const handleSave = async (publishStatus) => {
     setError("");
     setSaving(true);
-
-    let imageUrl = formData.featuredImage;
-    if (imageFile) {
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", imageFile);
-      try {
-        const { data } = await axios.post(`${API_BASE_URL}/upload/image`, uploadFormData, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        imageUrl = data.data.filePath;
-      } catch (err) {
-        setError("Image upload failed. Please try again.");
+    let featuredImageUrl = formData.featuredImage;
+    if (featuredImageFile) {
+      featuredImageUrl = await uploadFile(featuredImageFile, "image");
+      if (!featuredImageUrl) {
         setSaving(false);
-        return;
+        return null;
       }
     }
 
     try {
       const blogPostData = {
         ...formData,
-        content: editor.getHTML(),
-        featuredImage: imageUrl,
+        contentBlocks,
+        featuredImage: featuredImageUrl,
+        status: publishStatus,
       };
-      await axios.put(`${API_BASE_URL}/blogs/${id}`, blogPostData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate("/admin/blogs");
+      const { data } = await axios.put(
+        `${BASE_URL}/blogs/${id}`,
+        blogPostData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return data;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update the post.");
+      setError(err.response?.data?.message || "Failed to save the post.");
+      console.error("Error saving blog post:", err);
+      return null;
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSave(formData.status).then((savedBlog) => {
+      if (savedBlog) navigate("/admin/blogs");
+    });
+  };
+
+  const handlePreview = () => {
+    // This function now correctly prepares data directly from current state
+    const previewData = {
+      blogPost: formData,
+      contentBlocks: contentBlocks,
+      featuredImagePreview: featuredImagePreview,
+    };
+    sessionStorage.setItem("blogPreview", JSON.stringify(previewData));
+    window.open("/admin/blogs/preview", "_blank");
   };
 
   const handleAddTag = () => {
@@ -200,103 +552,425 @@ export default function BlogEdit() {
       setTagInput("");
     }
   };
-
   const handleDeleteTag = (tag) => {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
   if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
     <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-            <Typography variant="h4" sx={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, color: "#4a148c" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 700,
+                color: "#4a148c",
+              }}
+            >
               Edit Blog Post
             </Typography>
-            <Button type="submit" variant="contained" size="large" disabled={saving} sx={{ py: 1, borderRadius: "50px", fontFamily: "'Montserrat', sans-serif", fontWeight: "bold", background: "linear-gradient(45deg, #ec407a, #ab47bc)", "&:hover": { transform: "scale(1.02)" } }}>
-              {saving ? <CircularProgress size={24} color="inherit" /> : "Update Post"}
-            </Button>
+            <Stack direction="row" spacing={2}>
+              <Button variant="outlined" size="large" onClick={handlePreview}>
+                Preview
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={saving}
+                sx={{
+                  py: 1,
+                  borderRadius: "50px",
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontWeight: "bold",
+                  background: "linear-gradient(45deg, #ec407a, #ab47bc)",
+                  "&:hover": { transform: "scale(1.02)" },
+                }}
+              >
+                {saving ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Update Post"
+                )}
+              </Button>
+            </Stack>
           </Box>
 
-          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
 
           <Grid container spacing={4}>
             {/* Main Content Column */}
-            <Grid item xs={12} md={8}>
+            <Grid xs={12} md={8}>
+              {" "}
+              {/* Removed 'item' prop as per MUI v2 guidelines */}
               <Stack spacing={3}>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <TextField label="Blog Title" name="title" value={formData.title} onChange={handleChange} fullWidth required />
+                <Paper
+                  component={motion.div}
+                  variants={itemVariants}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
+                >
+                  <TextField
+                    label="Blog Title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                  />
                 </Paper>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 500, fontFamily: "'Montserrat', sans-serif" }}>Content</Typography>
-                  <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-                    <MenuBar editor={editor} />
-                    <Box sx={{ p: 1.5, minHeight: 400, "& .ProseMirror": { outline: "none" } }}>
-                      <EditorContent editor={editor} />
-                    </Box>
-                  </Paper>
-                </Paper>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <TextField label="Excerpt" name="excerpt" value={formData.excerpt} onChange={handleChange} fullWidth multiline rows={4} helperText="A short summary of the post for previews." />
+                <Paper
+                  component={motion.div}
+                  variants={itemVariants}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                      mb: 2,
+                    }}
+                  >
+                    Content
+                  </Typography>
+                  <Stack spacing={3}>
+                    {contentBlocks.map((block, index) => (
+                      <Paper
+                        key={index}
+                        variant="outlined"
+                        sx={{ p: 2, position: "relative" }}
+                      >
+                        {block.type === "paragraph" && (
+                          <ParagraphBlock
+                            value={block.value}
+                            onChange={(val) => handleBlockChange(index, val)}
+                          />
+                        )}
+                        {block.type === "heading" && (
+                          <HeadingBlock
+                            value={block.value}
+                            onChange={(val) => handleBlockChange(index, val)}
+                          />
+                        )}
+                        {block.type === "quote" && (
+                          <QuoteBlock
+                            value={block.value}
+                            onChange={(val) => handleBlockChange(index, val)}
+                          />
+                        )}
+                        {block.type === "image" && (
+                          <ImageBlock
+                            value={block.value}
+                            onChange={(val) => handleBlockChange(index, val)}
+                            onUpload={uploadFile}
+                          />
+                        )}
+                        {block.type === "video" && (
+                          <VideoBlock
+                            value={block.value}
+                            onChange={(val) => handleBlockChange(index, val)}
+                            onUpload={uploadFile}
+                          />
+                        )}
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          sx={{
+                            position: "absolute",
+                            top: -15,
+                            right: 8,
+                            background: "white",
+                            borderRadius: "50px",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => moveBlock(index, -1)}
+                            disabled={index === 0}
+                          >
+                            <ArrowUpward fontSize="inherit" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => moveBlock(index, 1)}
+                            disabled={index === contentBlocks.length - 1}
+                          >
+                            <ArrowDownward fontSize="inherit" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => deleteBlock(index)}
+                            color="error"
+                          >
+                            <Delete fontSize="inherit" />
+                          </IconButton>
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ mt: 3, flexWrap: "wrap" }}
+                  >
+                    <Button
+                      startIcon={<Notes />}
+                      onClick={() => addBlock("paragraph")}
+                    >
+                      Paragraph
+                    </Button>
+                    <Button
+                      startIcon={<Title />}
+                      onClick={() => addBlock("heading")}
+                    >
+                      Heading
+                    </Button>
+                    <Button
+                      startIcon={<FormatQuote />}
+                      onClick={() => addBlock("quote")}
+                    >
+                      Quote
+                    </Button>
+                    <Button
+                      startIcon={<PhotoCamera />}
+                      onClick={() => addBlock("image")}
+                    >
+                      Image
+                    </Button>
+                    <Button
+                      startIcon={<OndemandVideo />}
+                      onClick={() => addBlock("video")}
+                    >
+                      Video
+                    </Button>
+                  </Stack>
                 </Paper>
               </Stack>
             </Grid>
-
             {/* Sidebar Column */}
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
+              {" "}
+              {/* Removed 'item' prop as per MUI v2 guidelines */}
               <Stack spacing={3}>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>Publish Settings</Typography>
+                <Paper
+                  component={motion.div}
+                  variants={itemVariants}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Publish Settings
+                  </Typography>
                   <FormControl fullWidth>
                     <InputLabel>Status</InputLabel>
-                    <Select name="status" value={formData.status} label="Status" onChange={handleChange}>
+                    <Select
+                      name="status"
+                      value={formData.status}
+                      label="Status"
+                      onChange={handleChange}
+                    >
                       <MenuItem value="draft">Draft</MenuItem>
                       <MenuItem value="published">Published</MenuItem>
                       <MenuItem value="archived">Archived</MenuItem>
                     </Select>
                   </FormControl>
                 </Paper>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>Organization</Typography>
+                <Paper
+                  component={motion.div}
+                  variants={itemVariants}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Organization
+                  </Typography>
                   <Stack spacing={2}>
-                    <TextField label="Category" name="category" value={formData.category} onChange={handleChange} fullWidth />
+                    <TextField
+                      label="Category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      fullWidth
+                    />
                     <Box>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField label="Add a Tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddTag(); } }} size="small" fullWidth />
-                        <Button variant="outlined" onClick={handleAddTag}>Add</Button>
+                        <TextField
+                          label="Add a Tag"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddTag();
+                            }
+                          }}
+                          size="small"
+                          fullWidth
+                        />
+                        <Button variant="outlined" onClick={handleAddTag}>
+                          Add
+                        </Button>
                       </Stack>
                       <Box sx={{ mt: 2 }}>
                         {formData.tags.map((tag) => (
-                          <Chip key={tag} label={tag} onDelete={() => handleDeleteTag(tag)} sx={{ mr: 1, mb: 1, background: "rgba(171, 71, 188, 0.1)", color: "#ab47bc", fontWeight: 500 }} />
+                          <Chip
+                            key={tag}
+                            label={tag}
+                            onDelete={() => handleDeleteTag(tag)}
+                            sx={{
+                              mr: 1,
+                              mb: 1,
+                              background: "rgba(171, 71, 188, 0.1)",
+                              color: "#ab47bc",
+                              fontWeight: 500,
+                            }}
+                          />
                         ))}
                       </Box>
                     </Box>
                   </Stack>
                 </Paper>
-                <Paper component={motion.div} variants={itemVariants} elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>Featured Image</Typography>
-                  <Button variant="outlined" component="label" startIcon={<PhotoCamera />}>
-                    Change Image
-                    <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+                <Paper
+                  component={motion.div}
+                  variants={itemVariants}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Featured Image
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<PhotoCamera />}
+                  >
+                    {" "}
+                    Change Image{" "}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleFeaturedImageChange}
+                    />{" "}
                   </Button>
-                  {imagePreview && (
-                    <Box sx={{ mt: 2, borderRadius: 1, overflow: "hidden", border: "1px solid #ddd" }}>
-                      <img src={imagePreview} alt="Preview" style={{ width: "100%", display: "block" }} />
+                  {featuredImagePreview && (
+                    <Box
+                      sx={{
+                        mt: 2,
+                        borderRadius: 1,
+                        overflow: "hidden",
+                        border: "1px solid #ddd",
+                      }}
+                    >
+                      {" "}
+                      <img
+                        src={featuredImagePreview}
+                        alt="Preview"
+                        style={{ width: "100%", display: "block" }}
+                      />{" "}
                     </Box>
                   )}
                 </Paper>
-                <Accordion component={motion.div} variants={itemVariants} sx={{ boxShadow: 2, borderRadius: 2, "&.Mui-expanded": { margin: 0 } }}>
+                <Accordion
+                  component={motion.div}
+                  variants={itemVariants}
+                  sx={{
+                    boxShadow: 2,
+                    borderRadius: 2,
+                    "&.Mui-expanded": { margin: 0, "&:before": { opacity: 0 } },
+                  }}
+                >
                   <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>SEO Settings</Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontWeight: 600,
+                      }}
+                    >
+                      SEO Settings
+                    </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Stack spacing={2}>
-                      <TextField label="SEO Title" name="seoTitle" value={formData.seoTitle} onChange={handleChange} fullWidth helperText="Leave blank to use the main title." />
-                      <TextField label="SEO Description" name="seoDescription" value={formData.seoDescription} onChange={handleChange} fullWidth multiline rows={3} helperText="A short description for search engine results." />
+                      <TextField
+                        label="SEO Title"
+                        name="seoTitle"
+                        value={formData.seoTitle}
+                        onChange={handleChange}
+                        fullWidth
+                        helperText={`${formData.seoTitle.length} / 60`}
+                        inputProps={{ maxLength: 60 }}
+                      />
+                      <TextField
+                        label="SEO Description"
+                        name="seoDescription"
+                        value={formData.seoDescription}
+                        onChange={handleChange}
+                        fullWidth
+                        multiline
+                        rows={3}
+                        helperText={`${formData.seoDescription.length} / 160`}
+                        inputProps={{ maxLength: 160 }}
+                      />
+                      <Divider sx={{ my: 1 }} />
+                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                        SERP Preview:
+                      </Typography>
+                      <SERPPreview
+                        title={formData.seoTitle || formData.title}
+                        description={formData.seoDescription}
+                      />
                     </Stack>
                   </AccordionDetails>
                 </Accordion>
@@ -308,4 +982,3 @@ export default function BlogEdit() {
     </Box>
   );
 }
-

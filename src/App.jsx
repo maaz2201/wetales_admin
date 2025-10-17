@@ -10,7 +10,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import BlogList from './components/Blogs/BlogList';
 import BlogCreate from './components/Blogs/BlogCreate';
 import BlogEdit from './components/Blogs/BlogEdit';
-
+import BlogPreview from './components/Blogs/BlogPreview';
 // Your Wetales brand theme
 const theme = createTheme({
   palette: {
@@ -50,6 +50,7 @@ function App() {
             <Route path="blogs" element={<BlogList />} />
             <Route path="blogs/create" element={<BlogCreate />} />
             <Route path="blogs/edit/:id" element={<BlogEdit />} />
+            <Route path="blogs/preview" element={<BlogPreview />} />
           </Route>
           <Route path="/" element={<Login/>} />
         </Routes>
