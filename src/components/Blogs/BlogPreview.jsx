@@ -41,6 +41,7 @@ const BlogContent = styled(Box)(({ theme }) => ({
   },
   "& img, & video, & iframe": {
     minWidth: "100%",
+    maxWidth: "100%",
     height: "auto",
     borderRadius: theme.shape.borderRadius,
     margin: theme.spacing(3, "auto"),

@@ -73,6 +73,7 @@ const BlogPreviewContent = styled(Box)(({ theme }) => ({
   },
   "& .block-image": {
     minWidth: "100%",
+    maxWidth: "100%",
     height: "auto",
     borderRadius: theme.shape.borderRadius,
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
