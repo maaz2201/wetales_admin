@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -16,25 +16,30 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-} from '@mui/material';
-import { 
-  Article, 
-  CheckCircleOutline, 
-  EditOutlined, 
-  Add, 
-  Edit, 
-  TrendingUp 
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer, 
-  Tooltip as RechartsTooltip 
-} from 'recharts';
+  Chip,
+  Container,
+} from "@mui/material";
+import {
+  Article,
+  CheckCircleOutline,
+  EditOutlined,
+  Add,
+  Edit,
+  ArrowUpward,
+  EventNoteOutlined,
+  Description,
+  Archive,
+} from "@mui/icons-material";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+} from "recharts";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -42,594 +47,769 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-  }
+    transition: { staggerChildren: 0.1, delayChildren: 0.15 },
+  },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
 };
 
 const StatCard = ({ icon: IconComponent, title, value, color, trend }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
     <Paper
-      elevation={3}
       component={motion.div}
       variants={itemVariants}
+      elevation={0}
       sx={{
         p: { xs: 2, sm: 2.5, md: 3 },
-        borderRadius: { xs: 2, sm: 3 },
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-        border: `1px solid ${color}20`,
-        position: 'relative',
-        overflow: 'hidden',
-        width: '100%',
-        boxSizing: 'border-box',
-        minHeight: { xs: 'auto', sm: 120 },
-        '&:hover': {
-          transform: 'translateY(-5px)',
-          boxShadow: `0 12px 28px ${color}40`
-        },
-        '&::before': {
+        borderRadius: 2.5,
+        background: `linear-gradient(135deg, ${color}08 0%, ${color}02 100%)`,
+        border: `2px solid ${color}15`,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        position: "relative",
+        overflow: "hidden",
+        minHeight: { xs: 130, md: 150 },
+        "&::before": {
           content: '""',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: { xs: '60px', sm: '100px' },
-          height: { xs: '60px', sm: '100px' },
-          background: `${color}10`,
-          borderRadius: '0 0 0 100%',
-        }
+          position: "absolute",
+          top: -40,
+          right: -40,
+          width: 120,
+          height: 120,
+          background: `${color}05`,
+          borderRadius: "50%",
+          zIndex: 0,
+        },
+        "&:hover": {
+          transform: "translateY(-6px)",
+          border: `2px solid ${color}30`,
+          boxShadow: `0 10px 30px ${color}15`,
+        },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', zIndex: 1, minWidth: 0, flex: 1 }}>
-        <Box
-          sx={{
-            width: { xs: 45, sm: 56, md: 64 },
-            height: { xs: 45, sm: 56, md: 64 },
-            borderRadius: 2,
-            background: `linear-gradient(135deg, ${color}20 0%, ${color}40 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mr: { xs: 1.5, sm: 2 },
-            flexShrink: 0
-          }}
+      <Stack spacing={1.5} sx={{ position: "relative", zIndex: 1 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
         >
-          <IconComponent sx={{ fontSize: { xs: 24, sm: 32, md: 36 }, color }} />
-        </Box>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography 
-            variant="h4"
-            sx={{ 
-              fontWeight: 700, 
-              color: '#333',
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+          <Box
+            sx={{
+              width: { xs: 48, md: 56 },
+              height: { xs: 48, md: 56 },
+              borderRadius: 1.5,
+              background: `linear-gradient(135deg, ${color}25 0%, ${color}40 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {IconComponent && (
+              <IconComponent
+                sx={{ fontSize: { xs: 28, md: 32 }, color: color }}
+              />
+            )}
+          </Box>
+
+          {trend && (
+            <Stack
+              direction="row"
+              spacing={0.3}
+              alignItems="center"
+              sx={{
+                background: `${color}10`,
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+              }}
+            >
+              <ArrowUpward sx={{ fontSize: 14, color: color }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: color,
+                  fontWeight: 700,
+                  fontFamily: "'Inter', sans-serif",
+                }}
+              >
+                {trend}%
+              </Typography>
+            </Stack>
+          )}
+        </Stack>
+
+        <Box>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              color: "#0f172a",
+              fontFamily: "'Inter', sans-serif",
+              lineHeight: 1.2,
             }}
           >
             {value}
           </Typography>
-          <Typography 
+          <Typography
             variant="body2"
-            color="text.secondary" 
-            sx={{ 
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            sx={{
+              color: "#64748b",
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 500,
+              mt: 0.5,
             }}
           >
             {title}
           </Typography>
         </Box>
-      </Box>
-      {trend && (
-        <Box 
-          sx={{ 
-            display: { xs: 'none', sm: 'flex' },
-            alignItems: 'center',
-            gap: 0.5,
-            color: color,
-            zIndex: 1,
-            flexShrink: 0
-          }}
-        >
-          <TrendingUp fontSize="small" />
-          <Typography variant="caption" fontWeight={600}>{trend}</Typography>
-        </Box>
-      )}
+      </Stack>
     </Paper>
   );
 };
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ total: 0, published: 0, drafts: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    published: 0,
+    drafts: 0,
+    archived: 0,
+  });
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [userName, setUserName] = useState('Admin');
-  const token = localStorage.getItem('token');
+  const [error, setError] = useState("");
+  const [userName, setUserName] = useState("Admin");
+
+  const token = localStorage.getItem("token");
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.name) {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user?.name) {
       setUserName(user.name);
     }
-    
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
+      if (!token) {
+        setError("No authentication token found");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError("");
+
       try {
         const { data } = await axios.get(`${BASE_URL}/blogs?limit=1000`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
+
         const blogs = data.blogs || [];
-        const publishedCount = blogs.filter(b => b.status === 'published').length;
-        
+        const publishedCount = blogs.filter(
+          (b) => b.status === "published"
+        ).length;
+        const archivedCount = blogs.filter(
+          (b) => b.status === "archived"
+        ).length;
+        const draftsCount = blogs.length - publishedCount - archivedCount;
+
         setStats({
           total: blogs.length,
           published: publishedCount,
-          drafts: blogs.length - publishedCount,
+          drafts: draftsCount,
+          archived: archivedCount,
         });
 
-        const sortedPosts = [...blogs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setRecentPosts(sortedPosts.slice(0, 5));
+        const sortedPosts = blogs
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 8);
 
+        setRecentPosts(sortedPosts);
       } catch (err) {
-        setError('Failed to load dashboard data.');
+        console.error("Error fetching dashboard data:", err);
+        setError(
+          err.response?.data?.message ||
+            "Failed to load dashboard data. Please try again."
+        );
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [token]);
 
   const chartData = [
-    { name: 'Published', value: stats.published },
-    { name: 'Drafts', value: stats.drafts },
-  ];
-  const COLORS = ['#667eea', '#f59e0b'];
+    { name: "Published", value: stats.published, fill: "#10b981" },
+    { name: "Drafts", value: stats.drafts, fill: "#f59e0b" },
+    { name: "Archived", value: stats.archived, fill: "#ef4444" },
+  ].filter((item) => item.value > 0);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress size={60} />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#667eea" }} />
       </Box>
     );
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "published":
+        return { bg: "#d1fae5", text: "#065f46" };
+      case "draft":
+        return { bg: "#fef3c7", text: "#92400e" };
+      case "archived":
+        return { bg: "#fee2e2", text: "#7f1d1d" };
+      default:
+        return { bg: "#e5e7eb", text: "#374151" };
+    }
+  };
+
   return (
-    <Box 
-      component={motion.div} 
-      variants={containerVariants} 
-      initial="hidden" 
-      animate="visible"
-      sx={{ 
-        width: '100%',
-        maxWidth: '100vw',
-        boxSizing: 'border-box',
-        pb: { xs: 2, md: 0 },
-        paddingLeft: { xs: 2, md: 3, lg: 4 },
-          paddingRight: { xs: 2, md: 3, lg: 4 },
-        overflow: 'hidden'
-      }}
-    >
-      {/* Header Section */}
-      <motion.div variants={itemVariants}>
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          justifyContent="space-between" 
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          spacing={2}
-          sx={{ 
-            mb: { xs: 2, sm: 3, md: 4 },
-            width: '100%'
-          }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography 
-              variant={isMobile ? "h5" : "h4"} 
-              sx={{ 
-                fontFamily: "'Poppins', sans-serif", 
-                fontWeight: 700, 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 0.5,
-                fontSize: { xs: '1.5rem', sm: '2rem' },
-                wordBreak: 'break-word'
-              }}
-            >
-              Welcome back, {userName}!
-            </Typography>
-            <Typography 
-              variant={isMobile ? "body2" : "body1"} 
-              color="text.secondary" 
-              sx={{ 
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: { xs: '0.875rem', sm: '1rem' }
-              }}
-            >
-              Here's a quick overview of your blog's performance.
-            </Typography>
-          </Box>
-          <Button
-            component={Link}
-            to="/admin/blogs/create"
-            variant="contained"
-            startIcon={<Add />}
-            fullWidth={isMobile}
-            sx={{
-              borderRadius: 2,
-              py: { xs: 1.2, sm: 1.3 },
-              px: { xs: 2, sm: 3 },
-              fontFamily: "'Poppins', sans-serif",
-              fontWeight: 600,
-              textTransform: 'none',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-              whiteSpace: 'nowrap',
-              minWidth: { sm: 'auto' },
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.5)',
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-            Create New Post
-          </Button>
-        </Stack>
-      </motion.div>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: { xs: 2, md: 3 }, borderRadius: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Stats Cards */}
-      <Grid 
-        container 
-        spacing={{ xs: 2, sm: 2.5, md: 3 }} 
-        sx={{ 
-          mb: { xs: 2, sm: 3, md: 4 },
-          width: '100%',
-          m: 0
-        }}
+    <Container width="100%" minWidth="100vw" sx={{ p: { xs: 2, md: 3 } }}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        style={{ width: "100%", maxWidth: "100vw", padding: "0 16px" }}
       >
-        <Grid item xs={12} sm={4} sx={{ pl: '0 !important' }}>
-          <StatCard 
-            icon={Article} 
-            title="Total Posts" 
-            value={stats.total} 
-            color="#667eea"
-            width="100%"
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <StatCard 
-            icon={CheckCircleOutline} 
-            title="Published" 
-            value={stats.published} 
-            color="#10b981"
-            
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <StatCard 
-            icon={EditOutlined} 
-            title="Drafts" 
-            value={stats.drafts} 
-            color="#f59e0b"
-           
-          />
-        </Grid>
-      </Grid>
-      
-      {/* Recent Posts and Chart */}
-      <Grid 
-        container 
-        spacing={{ xs: 2, sm: 2.5, md: 3 }}
-        sx={{ 
-          width: '100%',
-          m: 0
-        }}
-      >
-        {/* Recent Posts */}
-        <Grid item xs={12} md={7} sx={{ pl: '0 !important' }}>
-          <motion.div variants={itemVariants} style={{ height: '100%' }}>
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                p: { xs: 2, sm: 2.5, md: 3 }, 
-                borderRadius: { xs: 2, sm: 3 }, 
-                height: '100%',
-                minHeight: { xs: 'auto', md: 400 },
-                border: '1px solid rgba(0,0,0,0.05)',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
+        {/* Header Section */}
+        <motion.div variants={itemVariants}>
+          <Box sx={{ mb: { xs: 3, md: 4 }, mt: { xs: 2, md: 0 } }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              spacing={2}
             >
-              <Stack 
-                direction="row" 
-                justifyContent="space-between" 
-                alignItems="center" 
-                sx={{ mb: 2 }}
-              >
-                <Typography 
-                  variant={isMobile ? "h6" : "h5"} 
-                  sx={{ 
-                    fontFamily: "'Poppins', sans-serif", 
-                    fontWeight: 700, 
-                    color: '#1e293b',
-                    fontSize: { xs: '1.1rem', sm: '1.5rem' }
+              <Box>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 800,
+                    color: "#0f172a",
+                    mb: 0.5,
+                    fontSize: { xs: "1.75rem", md: "2.25rem" },
                   }}
                 >
-                  Recent Posts
+                  Welcome back, {userName}!
                 </Typography>
-                <Button 
-                  component={Link} 
-                  to="/admin/blogs" 
-                  size="small"
-                  sx={{ 
-                    textTransform: 'none',
-                    fontFamily: "'Poppins', sans-serif",
-                    color: '#667eea',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    minWidth: 'auto',
-                    p: { xs: 0.5, sm: 1 }
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#64748b",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: { xs: "0.875rem", md: "1rem" },
                   }}
                 >
-                  View All
-                </Button>
-              </Stack>
-              
-              <List 
-                disablePadding 
-                sx={{ 
-                  maxHeight: { xs: 'auto', md: 320 }, 
-                  overflowY: { xs: 'visible', md: 'auto' },
-                  '&::-webkit-scrollbar': {
-                    width: '6px',
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </Typography>
+              </Box>
+              <Button
+                component={Link}
+                to="/admin/blogs/create"
+                variant="contained"
+                startIcon={<Add />}
+                fullWidth={isMobile}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.3,
+                  px: 3,
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  fontSize: "0.95rem",
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  boxShadow: "0 8px 20px rgba(102, 126, 234, 0.3)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "translateY(-3px)",
+                    boxShadow: "0 12px 30px rgba(102, 126, 234, 0.4)",
                   },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: '#667eea40',
-                    borderRadius: '3px',
-                  }
                 }}
               >
-                {recentPosts.length > 0 ? recentPosts.map((post, index) => (
-                  <React.Fragment key={post._id}>
-                    <ListItem 
-                      disableGutters 
-                      sx={{ 
-                        py: { xs: 1.5, sm: 1.8 },
-                        px: 0,
-                        alignItems: 'flex-start'
-                      }}
-                      secondaryAction={
-                        <Tooltip title="Edit Post">
-                          <IconButton 
-                            component={Link} 
-                            to={`/admin/blogs/edit/${post._id}`} 
-                            size="small"
-                            sx={{
-                              color: '#667eea',
-                              mt: { xs: 0.5, sm: 0 },
-                              '&:hover': {
-                                background: '#667eea20'
-                              }
-                            }}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      }
-                    >
-                      <ListItemText 
-                        primary={post.title} 
-                        secondary={`Created: ${new Date(post.createdAt).toLocaleDateString()}`}
-                        primaryTypographyProps={{ 
-                          noWrap: true, 
-                          textOverflow: 'ellipsis',
-                          fontWeight: 600,
-                          fontFamily: "'Poppins', sans-serif",
-                          fontSize: { xs: '0.875rem', sm: '1rem' },
-                          pr: { xs: 5, sm: 6 }
+                Create New Post
+              </Button>
+            </Stack>
+          </Box>
+        </motion.div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            severity="error"
+            onClose={() => setError("")}
+            sx={{ mb: 3, borderRadius: 2, fontFamily: "'Inter', sans-serif" }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Stats Grid */}
+        <Grid
+          container
+          spacing={{ xs: 2, md: 3 }}
+          sx={{ mb: { xs: 3, md: 4 } }}
+        >
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={Article}
+              title="Total Posts"
+              value={stats.total}
+              color="#667eea"
+              // trend={stats.total > 0 ? '12' : undefined}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={CheckCircleOutline}
+              title="Published"
+              value={stats.published}
+              color="#10b981"
+              // trend={stats.published > 0 ? '8' : undefined}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={EditOutlined}
+              title="Drafts"
+              value={stats.drafts}
+              color="#f59e0b"
+              // trend={stats.drafts > 0 ? '5' : undefined}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={Archive}
+              title="Archived"
+              value={stats.archived}
+              color="#ef4444"
+              // trend={undefined}
+            />
+          </Grid>
+        </Grid>
+
+        {/* Main Content: Recent Posts + Chart */}
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+          {/* Recent Posts */}
+          <Grid item xs={12} md={7}>
+            <motion.div variants={itemVariants} style={{ height: "100%" }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  borderRadius: 2.5,
+                  border: "1px solid #e2e8f0",
+                  overflow: "hidden",
+                  background: "#ffffff",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {/* Header */}
+                <Box
+                  sx={{
+                    p: { xs: 2, md: 3 },
+                    background:
+                      "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                          mb: 0.3,
                         }}
-                        secondaryTypographyProps={{
-                          fontSize: { xs: '0.7rem', sm: '0.8rem' }
+                      >
+                        Recent Posts
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        component="span"
+                        sx={{
+                          color: "#64748b",
+                          fontFamily: "'Inter', sans-serif",
                         }}
-                        sx={{ m: 0 }}
-                      />
-                    </ListItem>
-                    {index < recentPosts.length - 1 && <Divider component="li" />}
-                  </React.Fragment>
-                )) : (
-                  <Box sx={{ 
-                    py: { xs: 4, sm: 6 }, 
-                    textAlign: 'center',
-                    px: 2
-                  }}>
-                    <Article sx={{ fontSize: { xs: 48, sm: 60 }, color: '#e5e7eb', mb: 2 }} />
-                    <Typography 
-                      color="text.secondary"
-                      sx={{ 
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: { xs: '0.875rem', sm: '1rem' },
-                        mb: 2
-                      }}
-                    >
-                      No recent posts found.
-                    </Typography>
+                      >
+                        {recentPosts.length} of {stats.total} posts
+                      </Typography>
+                    </Box>
                     <Button
                       component={Link}
-                      to="/admin/blogs/create"
-                      variant="outlined"
-                      startIcon={<Add />}
-                      size={isMobile ? 'small' : 'medium'}
-                      sx={{ 
-                        textTransform: 'none',
-                        fontFamily: "'Poppins', sans-serif",
-                        borderColor: '#667eea',
-                        color: '#667eea',
-                        '&:hover': {
-                          borderColor: '#5568d3',
-                          background: '#667eea10'
-                        }
+                      to="/admin/blogs"
+                      size="small"
+                      sx={{
+                        textTransform: "none",
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 600,
+                        color: "#667eea",
+                        fontSize: "0.875rem",
+                        "&:hover": { background: "#667eea10" },
                       }}
                     >
-                      Create First Post
+                      View All →
                     </Button>
-                  </Box>
-                )}
-              </List>
-            </Paper>
-          </motion.div>
-        </Grid>
-
-        {/* Chart */}
-        <Grid item xs={12} md={5}>
-          <motion.div variants={itemVariants} style={{ height: '100%' }}>
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                p: { xs: 2, sm: 2.5, md: 3 }, 
-                borderRadius: { xs: 2, sm: 3 }, 
-                height: '100%',
-                minHeight: { xs: 300, md: 400 },
-                border: '1px solid rgba(0,0,0,0.05)',
-                display: 'flex',
-                flexDirection: 'column',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-            >
-              <Typography 
-                variant={isMobile ? "h6" : "h5"} 
-                sx={{ 
-                  fontFamily: "'Poppins', sans-serif", 
-                  fontWeight: 700, 
-                  color: '#1e293b',
-                  mb: 2,
-                  fontSize: { xs: '1.1rem', sm: '1.5rem' }
-                }}
-              >
-                Post Status
-              </Typography>
-              
-              <Box sx={{ 
-                flexGrow: 1, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                width: '100%',
-                minHeight: { xs: 180, sm: 220 }
-              }}>
-                {stats.total > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie 
-                        data={chartData} 
-                        dataKey="value" 
-                        nameKey="name" 
-                        cx="50%" 
-                        cy="50%" 
-                        outerRadius={isMobile ? 65 : 90}
-                        innerRadius={isMobile ? 40 : 55}
-                        fill="#8884d8" 
-                        label={!isMobile}
-                        paddingAngle={5}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip 
-                        contentStyle={{ 
-                          borderRadius: 8, 
-                          border: 'none',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                          fontFamily: "'Poppins', sans-serif"
+                  </Stack>
+                </Box>
+                ``
+                {/* Posts List */}
+                <List disablePadding sx={{ flex: 1, overflow: "auto" }}>
+                  {recentPosts.length > 0 ? (
+                    recentPosts.map((post, index) => {
+                      const statusColor = getStatusColor(post.status);
+                      return (
+                        <React.Fragment key={post._id}>
+                          <ListItem
+                            disableGutters
+                            sx={{
+                              px: { xs: 2, md: 3 },
+                              py: 2,
+                              transition: "background 0.2s ease",
+                              "&:hover": { background: "#f8fafc" },
+                              alignItems: "flex-start",
+                            }}
+                            secondaryAction={
+                              <Tooltip title="Edit Post">
+                                <IconButton
+                                  component={Link}
+                                  to={`/admin/blogs/edit/${post._id}`}
+                                  size="small"
+                                  sx={{
+                                    color: "#667eea",
+                                    "&:hover": { background: "#667eea15" },
+                                  }}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            }
+                          >
+                            <ListItemText
+                              primary={post.title}
+                              secondary={
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 2,
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 0.5,
+                                    }}
+                                  >
+                                    <EventNoteOutlined
+                                      sx={{ fontSize: 14, color: "#94a3b8" }}
+                                    />
+                                    <Typography
+                                      component="span"
+                                      variant="caption"
+                                      sx={{
+                                        color: "#64748b",
+                                        fontFamily: "'Inter', sans-serif",
+                                      }}
+                                    >
+                                      {new Date(
+                                        post.createdAt
+                                      ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      })}
+                                    </Typography>
+                                  </Box>
+                                  {post.category && (
+                                    <Typography
+                                      component="span"
+                                      variant="caption"
+                                      sx={{
+                                        color: "#64748b",
+                                        fontFamily: "'Inter', sans-serif",
+                                      }}
+                                    >
+                                      📌 {post.category}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                              primaryTypographyProps={{
+                                sx: {
+                                  fontWeight: 600,
+                                  color: "#0f172a",
+                                  fontFamily: "'Inter', sans-serif",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  pr: 2,
+                                },
+                              }}
+                              secondaryTypographyProps={{
+                                component: "div",
+                                sx: {
+                                  m: 0,
+                                  display: "flex",
+                                  gap: 1,
+                                  mt: 0.5,
+                                  alignItems: "center",
+                                },
+                              }}
+                            />
+                            {/* Status Chip */}
+                            <Chip
+                              label={post.status || "draft"}
+                              size="small"
+                              sx={{
+                                fontWeight: 600,
+                                fontFamily: "'Inter', sans-serif",
+                                fontSize: "0.7rem",
+                                height: 24,
+                                background: statusColor.bg,
+                                color: statusColor.text,
+                                textTransform: "capitalize",
+                                ml: "auto",
+                              }}
+                            />
+                          </ListItem>
+                          {index < recentPosts.length - 1 && (
+                            <Divider sx={{ my: 0 }} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <Box
+                      sx={{
+                        py: { xs: 6, md: 8 },
+                        px: 3,
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Description
+                        sx={{
+                          fontSize: { xs: 56, md: 64 },
+                          color: "#e2e8f0",
+                          mb: 2,
                         }}
                       />
-                    </PieChart>
-                  </ResponsiveContainer>
+                      <Typography
+                        sx={{
+                          color: "#64748b",
+                          fontFamily: "'Inter', sans-serif",
+                          mb: 2,
+                        }}
+                      >
+                        No posts yet. Start creating your first blog post!
+                      </Typography>
+                      <Button
+                        component={Link}
+                        to="/admin/blogs/create"
+                        variant="outlined"
+                        startIcon={<Add />}
+                        sx={{
+                          textTransform: "none",
+                          fontFamily: "'Inter', sans-serif",
+                          borderColor: "#667eea",
+                          color: "#667eea",
+                          "&:hover": {
+                            borderColor: "#667eea",
+                            background: "#667eea10",
+                          },
+                        }}
+                      >
+                        Create First Post
+                      </Button>
+                    </Box>
+                  )}
+                </List>
+              </Paper>
+            </motion.div>
+          </Grid>
+
+          {/* Chart Section */}
+          <Grid item xs={12} md={5}>
+            <motion.div variants={itemVariants} style={{ height: "100%" }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  borderRadius: 2.5,
+                  border: "1px solid #e2e8f0",
+                  p: { xs: 2, md: 3 },
+                  background: "#ffffff",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 700,
+                      color: "#0f172a",
+                      mb: 0.3,
+                    }}
+                  >
+                    Post Distribution
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    component="span"
+                    sx={{
+                      color: "#64748b",
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  >
+                    Status breakdown of your posts
+                  </Typography>
+                </Box>
+
+                {stats.total > 0 && chartData.length > 0 ? (
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={isMobile ? 40 : 50}
+                          outerRadius={isMobile ? 70 : 85}
+                          paddingAngle={3}
+                          dataKey="value"
+                          label={!isMobile}
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          contentStyle={{
+                            borderRadius: 8,
+                            border: "none",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            fontFamily: "'Inter', sans-serif",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <Stack
+                      direction={isMobile ? "column" : "row"}
+                      spacing={1.5}
+                      sx={{
+                        mt: 2,
+                        width: "100%",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {chartData.map((item, idx) => (
+                        <Stack
+                          key={idx}
+                          direction="row"
+                          spacing={0.8}
+                          alignItems="center"
+                        >
+                          <Box
+                            sx={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: "50%",
+                              bgcolor: item.fill,
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: "'Inter', sans-serif",
+                              fontWeight: 600,
+                              color: "#0f172a",
+                            }}
+                          >
+                            {item.name} ({item.value})
+                          </Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Box>
                 ) : (
-                  <Typography 
-                    color="text.secondary" 
-                    sx={{ 
-                      textAlign: 'center',
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
                     }}
                   >
-                    No data available
-                  </Typography>
+                    <Typography
+                      sx={{
+                        color: "#64748b",
+                        fontFamily: "'Inter', sans-serif",
+                      }}
+                    >
+                      Create your first post to see analytics
+                    </Typography>
+                  </Box>
                 )}
-              </Box>
-              
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                mt: 2, 
-                gap: { xs: 2, sm: 3 }, 
-                flexWrap: 'wrap',
-                pt: 1
-              }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ 
-                    width: { xs: 10, sm: 12 }, 
-                    height: { xs: 10, sm: 12 }, 
-                    borderRadius: '50%', 
-                    bgcolor: COLORS[0], 
-                    mr: 1,
-                    flexShrink: 0
-                  }} />
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: "'Poppins', sans-serif", 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                    }}
-                  >
-                    Published ({stats.published})
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ 
-                    width: { xs: 10, sm: 12 }, 
-                    height: { xs: 10, sm: 12 }, 
-                    borderRadius: '50%', 
-                    bgcolor: COLORS[1], 
-                    mr: 1,
-                    flexShrink: 0
-                  }} />
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontFamily: "'Poppins', sans-serif", 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                    }}
-                  >
-                    Drafts ({stats.drafts})
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </motion.div>
+              </Paper>
+            </motion.div>
+          </Grid>
         </Grid>
-      </Grid>
-    </Box>
+      </motion.div>
+    </Container>
   );
 }

@@ -37,6 +37,9 @@ import {
   Delete,
   OndemandVideo,
 } from "@mui/icons-material";
+import RichTextEditor from "../Blogs/RichTextEditor.jsx"; // Add this import
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined"; // New for AI button
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 const SERVER_BASE_URL = import.meta.env.VITE_SERVER_URL;
@@ -52,18 +55,7 @@ const itemVariants = {
 
 // --- Block Components ---
 const ParagraphBlock = ({ value, onChange }) => (
-  <TextField
-    fullWidth
-    multiline
-    variant="standard"
-    placeholder="Start writing a paragraph..."
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    InputProps={{
-      disableUnderline: true,
-      style: { fontSize: "1.1rem", lineHeight: 1.8 },
-    }}
-  />
+  <RichTextEditor value={value} onChange={onChange} />
 );
 const HeadingBlock = ({ value, onChange }) => (
   <TextField
@@ -323,7 +315,10 @@ export default function BlogCreate() {
     status: "draft",
     seoTitle: "",
     seoDescription: "",
+    seoKeywords: [], // <-- ADDED for keywords
+
   });
+
   const [contentBlocks, setContentBlocks] = useState([
     { type: "paragraph", value: "" },
   ]);
@@ -334,7 +329,9 @@ export default function BlogCreate() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
+ const [keywordInput, setKeywordInput] = useState(""); // NEW for keywords
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false); // NEW for AI
+  
   const handleBlockChange = (index, newValue) => {
     const newBlocks = [...contentBlocks];
     newBlocks[index].value = newValue;
@@ -421,6 +418,8 @@ export default function BlogCreate() {
     } finally {
       setLoading(false);
     }
+      console.log('Blog payload:', blogPostData);
+
   };
 
   const handleSubmit = (e) => {
@@ -449,9 +448,42 @@ export default function BlogCreate() {
   const handleDeleteTag = (tag) => {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
-
+  // const handleAISuggestions = async () => {
+  //   setIsFetchingSuggestions(true);
+  //   setTimeout(() => {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       seoTitle: prev.seoTitle || "Creative Wedding Invitation Ideas",
+  //       seoDescription:
+  //         prev.seoDescription ||
+  //         "Explore the best modern digital invites for weddings, tips and designs for your special day.",
+  //       seoKeywords: prev.seoKeywords.length
+  //         ? prev.seoKeywords
+  //         : ["wedding invitations", "digital invites"],
+  //     }));
+  //     setIsFetchingSuggestions(false);
+  //   }, 1800);
+  // };
+  const handleAddKeyword = () => {
+    if (
+      keywordInput.trim() &&
+      !formData.seoKeywords.includes(keywordInput.trim())
+    ) {
+      setFormData({
+        ...formData,
+        seoKeywords: [...formData.seoKeywords, keywordInput.trim()],
+      });
+      setKeywordInput("");
+    }
+  };
+  const handleDeleteKeyword = (keyword) => {
+    setFormData({
+      ...formData,
+      seoKeywords: formData.seoKeywords.filter((k) => k !== keyword),
+    });
+  };
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+    <Box sx={{ p: 3, maxWidth: "100vw", mx: "auto" }}>
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -809,58 +841,277 @@ export default function BlogCreate() {
                   )}
                 </Paper>
 
-                <Accordion
-                  component={motion.div}
-                  variants={itemVariants}
+               <Paper
+              component={motion.div}
+              variants={itemVariants}
+              elevation={2}
+              sx={{ p: 3, borderRadius: 2 }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                SEO Settings
+                <Tooltip
+                  title={
+                    <span>
+                      <b>SEO Title:</b> Main link shown on Google<br />
+                      <b>Description:</b> Summary for search results<br />
+                      <b>Best Practices:</b> Use keywords, keep titles &lt; 60 chars, descriptions &lt; 160 chars
+                    </span>
+                  }
+                  arrow
+                >
+                  <InfoOutlinedIcon color="primary" sx={{ fontSize: 20 }} />
+                </Tooltip>
+                {/* <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<SmartToyOutlinedIcon />}
+                  onClick={handleAISuggestions}
+                  disabled={isFetchingSuggestions}
                   sx={{
-                    boxShadow: 2,
-                    borderRadius: 2,
-                    "&.Mui-expanded": { margin: 0, "&:before": { opacity: 0 } },
+                    ml: "auto",
+                    fontWeight: 500,
+                    borderRadius: 4,
+                    minWidth: 0,
+                    px: 1.3,
                   }}
                 >
-                  <AccordionSummary expandIcon={<ExpandMore />}>
+                  {isFetchingSuggestions ? "Loading..." : "AI Suggestions"}
+                </Button> */}
+              </Typography>
+              <Accordion
+                sx={{
+                  boxShadow: 2,
+                  borderRadius: 2,
+                  "&.Mui-expanded": { margin: 0, "&:before": { opacity: 0 } },
+                  mb: 0,
+                  background: "#fbf7fd",
+                }}
+                defaultExpanded
+              >
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Stack direction="row" spacing={2} alignItems="center" width="100%">
                     <Typography
                       sx={{
                         fontFamily: "'Montserrat', sans-serif",
                         fontWeight: 600,
                       }}
                     >
-                      SEO Settings
+                      Optimize SEO
                     </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Stack spacing={2}>
+                    <Chip
+                      size="small"
+                      label="Recommended"
+                      sx={{
+                        color: "#fff",
+                        background: "linear-gradient(90deg,#ab47bc,#ec407a)",
+                      }}
+                    />
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <TextField
+                      label="SEO Title"
+                      name="seoTitle"
+                      value={formData.seoTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, seoTitle: e.target.value })
+                      }
+                      fullWidth
+                      helperText={
+                        <>
+                          <span
+                            style={{
+                              color:
+                                formData.seoTitle.length > 60
+                                  ? "#c62828"
+                                  : "#757575",
+                            }}
+                          >
+                            {formData.seoTitle.length} / 60
+                          </span>
+                          <span style={{ marginLeft: 8 }}>
+                            {formData.seoTitle.length > 60 && " Too long"}
+                          </span>
+                        </>
+                      }
+                      inputProps={{ maxLength: 70 }}
+                      FormHelperTextProps={{
+                        component: "div",
+                        sx: { display: "flex", alignItems: "center", mt: 0.5 },
+                      }}
+                    />
+                    <TextField
+                      label="SEO Description"
+                      name="seoDescription"
+                      value={formData.seoDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, seoDescription: e.target.value })
+                      }
+                      fullWidth
+                      multiline
+                      rows={3}
+                      helperText={
+                        <>
+                          <span
+                            style={{
+                              color:
+                                formData.seoDescription.length > 160
+                                  ? "#c62828"
+                                  : "#757575",
+                            }}
+                          >
+                            {formData.seoDescription.length} / 160
+                          </span>
+                          <span style={{ marginLeft: 8 }}>
+                            {formData.seoDescription.length > 160 &&
+                              " Too long"}
+                          </span>
+                        </>
+                      }
+                      inputProps={{ maxLength: 180 }}
+                    />
+                    {/* Keywords UI */}
+                    <Stack spacing={1}>
                       <TextField
-                        label="SEO Title"
-                        name="seoTitle"
-                        value={formData.seoTitle}
-                        onChange={handleChange}
+                        label="SEO Keyword"
+                        value={keywordInput}
+                        onChange={(e) => setKeywordInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddKeyword();
+                          }
+                        }}
+                        disabled={isFetchingSuggestions}
+                        helperText="Press enter or 'Add' to add multiple keywords"
+                        InputProps={{
+                          endAdornment: (
+                            <Button
+                              size="small"
+                              onClick={handleAddKeyword}
+                              disabled={isFetchingSuggestions}
+                            >
+                              Add
+                            </Button>
+                          ),
+                        }}
                         fullWidth
-                        helperText={`${formData.seoTitle.length} / 60`}
-                        inputProps={{ maxLength: 60 }}
                       />
-                      <TextField
-                        label="SEO Description"
-                        name="seoDescription"
-                        value={formData.seoDescription}
-                        onChange={handleChange}
-                        fullWidth
-                        multiline
-                        rows={3}
-                        helperText={`${formData.seoDescription.length} / 160`}
-                        inputProps={{ maxLength: 160 }}
-                      />
-                      <Divider sx={{ my: 1 }} />
-                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        SERP Preview:
-                      </Typography>
-                      <SERPPreview
-                        title={formData.seoTitle || formData.title}
-                        description={formData.seoDescription}
-                      />
+                      <Box sx={{ mt: 0.5 }}>
+                        {(formData.seoKeywords || []).map((kw) => (
+                          <Chip
+                            key={kw}
+                            label={kw}
+                            onDelete={() => handleDeleteKeyword(kw)}
+                            color="secondary"
+                            sx={{
+                              m: 0.3,
+                              bgcolor: "rgba(186,104,200,0.08)",
+                              color: "#6a1b9a",
+                              fontWeight: 500,
+                            }}
+                          />
+                        ))}
+                      </Box>
                     </Stack>
-                  </AccordionDetails>
-                </Accordion>
+                    <Divider sx={{ my: 1 }} />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        color: "#7b1fa2",
+                        mb: 1,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      SERP Preview
+                    </Typography>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 2,
+                        bgcolor: "#fff",
+                        borderRadius: 1,
+                        border: "1px solid #eee",
+                        maxWidth: 450,
+                        mb: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#1a0dab",
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          textDecoration: "underline",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          mb: "-2px",
+                        }}
+                      >
+                        {formData.seoTitle ||
+                          formData.title ||
+                          "Your Blog Title Will Appear Here"}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#006621",
+                          fontSize: "14px",
+                          mb: "2px",
+                        }}
+                      >
+                        https://www.wetales.in/blog/your-slug
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#545454",
+                          fontSize: "15px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: "2",
+                          WebkitBoxOrient: "vertical",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {formData.seoDescription ||
+                          formData.excerpt ||
+                          "Your SEO description will appear here, giving a brief summary of your amazing article."}
+                      </Typography>
+                      {/* Optionally show keywords summary below */}
+                      {!!(formData.seoKeywords || []).length && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: "block",
+                            pt: 1,
+                            color: "#6a1b9a",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Keywords:{" "}
+                          {(formData.seoKeywords || []).join(", ")}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            </Paper>
               </Stack>
             </Grid>
           </Grid>

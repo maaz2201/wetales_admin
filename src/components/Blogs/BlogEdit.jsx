@@ -1,44 +1,22 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  IconButton,
-  Divider,
-  Grid,
-  CircularProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Tabs,
-  Tab,
+  Box, Paper, TextField, Button, Typography, Alert, Chip, FormControl,
+  InputLabel, Select, MenuItem, Stack, IconButton, Tooltip, Divider, Grid,
+  CircularProgress, Accordion, AccordionSummary, AccordionDetails, Tabs, Tab
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import {
-  PhotoCamera,
-  ExpandMore,
-  Title,
-  Notes,
-  FormatQuote,
-  ArrowUpward,
-  ArrowDownward,
-  Delete,
-  OndemandVideo,
+  PhotoCamera, ExpandMore, Title, Notes, FormatQuote,
+  ArrowUpward, ArrowDownward, Delete, OndemandVideo
 } from "@mui/icons-material";
+import RichTextEditor from "../Blogs/RichTextEditor.jsx";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
-const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER; // Correctly referencing SERVER_BASE_URL
+const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER;
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -49,21 +27,8 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-// --- Block Components ---
-// --- Block Components ---
 const ParagraphBlock = ({ value, onChange }) => (
-  <TextField
-    fullWidth
-    multiline
-    variant="standard"
-    placeholder="Start writing a paragraph..."
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    InputProps={{
-      disableUnderline: true,
-      style: { fontSize: "1.1rem", lineHeight: 1.8 },
-    }}
-  />
+  <RichTextEditor value={value} onChange={onChange} />
 );
 const HeadingBlock = ({ value, onChange }) => (
   <TextField
@@ -106,44 +71,27 @@ const QuoteBlock = ({ value, onChange }) => (
 
 const ImageBlock = ({ value, onChange, onUpload }) => {
   const [imagePreview, setImagePreview] = useState("");
-
-  // --- DEBUGGING START ---
-  console.log("ImageBlock: value.src received:", value.src);
-  console.log("ImageBlock: SERVER_BASE_URL:", SERVER_BASE_URL);
-  // --- DEBUGGING END ---
-
   useEffect(() => {
     if (value.src) {
       const newPreview = value.src.startsWith("data:image")
         ? value.src
-        : `${SERVER_BASE_URL}${value.src}`; // Ensure SERVER_BASE_URL is not undefined
+        : `${SERVER_BASE_URL}${value.src}`;
       setImagePreview(newPreview);
-      // --- DEBUGGING START ---
-      console.log("ImageBlock: useEffect setting imagePreview to:", newPreview);
-      // --- DEBUGGING END ---
     } else {
       setImagePreview("");
-      // --- DEBUGGING START ---
-      console.log("ImageBlock: useEffect clearing imagePreview.");
-      // --- DEBUGGING END ---
     }
-  }, [value.src, SERVER_BASE_URL]);
-
+  }, [value.src]);
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result); // Show local preview
+    reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
-
     const imageUrl = await onUpload(file, "image");
     if (imageUrl) {
       onChange({ src: imageUrl, caption: value.caption || "" });
-      // The useEffect will handle updating the preview with the final server URL
     }
   };
-
   return (
     <Stack spacing={2} alignItems="center">
       {imagePreview ? (
@@ -184,36 +132,19 @@ const VideoBlock = ({ value, onChange, onUpload }) => {
   const [tab, setTab] = useState(value.type || "embed");
   const [uploading, setUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState("");
-
-  // --- DEBUGGING START ---
-  console.log("VideoBlock: value.src received:", value.src);
-  console.log("VideoBlock: value.type received:", value.type);
-  console.log("VideoBlock: SERVER_BASE_URL:", SERVER_BASE_URL);
-  // --- DEBUGGING END ---
-
   useEffect(() => {
     if (value.type === "upload" && value.src) {
       const newPreview = value.src.startsWith("data:video")
         ? value.src
-        : `${SERVER_BASE_URL}${value.src}`; // Ensure SERVER_BASE_URL is not undefined
+        : `${SERVER_BASE_URL}${value.src}`;
       setVideoPreview(newPreview);
-      // --- DEBUGGING START ---
-      console.log("VideoBlock: useEffect setting videoPreview to:", newPreview);
-      // --- DEBUGGING END ---
     } else {
       setVideoPreview("");
-      // --- DEBUGGING START ---
-      console.log("VideoBlock: useEffect clearing videoPreview.");
-      // --- DEBUGGING END ---
     }
     if (value.type && value.type !== tab) {
       setTab(value.type);
-      // --- DEBUGGING START ---
-      console.log("VideoBlock: useEffect setting tab to:", value.type);
-      // --- DEBUGGING END ---
     }
-  }, [value.src, value.type, SERVER_BASE_URL, tab]);
-
+  }, [value.src, value.type]);
   const getEmbedUrl = (url) => {
     if (!url) return null;
     let videoId = "";
@@ -231,33 +162,27 @@ const VideoBlock = ({ value, onChange, onUpload }) => {
     }
     return null;
   };
-
   const embedUrl = value.type === "embed" ? getEmbedUrl(value.src) : null;
-
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-
     const reader = new FileReader();
-    reader.onloadend = () => setVideoPreview(reader.result); // Show local preview
+    reader.onloadend = () => setVideoPreview(reader.result);
     reader.readAsDataURL(file);
-
     const videoUrl = await onUpload(file, "video");
     if (videoUrl) {
       onChange({ src: videoUrl, type: "upload" });
-      // The useEffect will handle updating the preview with the final server URL
     }
     setUploading(false);
   };
-
   return (
     <Stack spacing={2}>
       <Tabs
         value={tab}
         onChange={(e, newTab) => {
           setTab(newTab);
-          onChange({ src: "", type: newTab }); // Clear src when changing tab type
+          onChange({ src: "", type: newTab });
         }}
         centered
       >
@@ -339,7 +264,7 @@ const SERPPreview = ({ title, description }) => (
         color: "#1a0dab",
         fontSize: "18px",
         textDecoration: "underline",
-        whiteWhiteSpace: "nowrap",
+        whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
       }}
@@ -361,7 +286,8 @@ const SERPPreview = ({ title, description }) => (
         WebkitBoxOrient: "vertical",
       }}
     >
-      {description || "Your SEO description will appear here."}
+      {description ||
+        "Your SEO description will appear here, giving a brief summary of your amazing article."}
     </Typography>
   </Box>
 );
@@ -376,6 +302,7 @@ export default function BlogEdit() {
     status: "draft",
     seoTitle: "",
     seoDescription: "",
+    seoKeywords: [],
     featuredImage: "",
   });
   const [contentBlocks, setContentBlocks] = useState([]);
@@ -385,6 +312,9 @@ export default function BlogEdit() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -393,15 +323,12 @@ export default function BlogEdit() {
       navigate("/login");
       return;
     }
-
-    // Only attempt to fetch blog data if an ID is present in the URL params
     if (id) {
       const fetchBlog = async () => {
         try {
           const { data } = await axios.get(`${BASE_URL}/blogs/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log("Fetched blog data:", data);
           setFormData({
             title: data.title || "",
             excerpt: data.excerpt || "",
@@ -410,14 +337,16 @@ export default function BlogEdit() {
             status: data.status || "draft",
             seoTitle: data.seoTitle || "",
             seoDescription: data.seoDescription || "",
+            seoKeywords: data.seoKeywords || [],
             featuredImage: data.featuredImage || "",
           });
           setContentBlocks(data.contentBlocks || []);
           if (data.featuredImage) {
             setFeaturedImagePreview(`${SERVER_BASE_URL}${data.featuredImage}`);
+          } else {
+            setFeaturedImagePreview("");
           }
         } catch (err) {
-          console.error("Error fetching blog post:", err);
           setError("Failed to load blog post.");
         } finally {
           setLoading(false);
@@ -425,14 +354,8 @@ export default function BlogEdit() {
       };
       fetchBlog();
     } else {
-      // If no ID is present, this is not a valid edit page.
-      // Set loading to false and potentially redirect or show an error.
       setLoading(false);
-      setError(
-        "Invalid blog post ID for editing. Please select a post to edit."
-      );
-      // You might want to redirect the user to the blog list or a creation page.
-      // navigate("/admin/blogs");
+      setError("Invalid blog post ID for editing. Please select a post to edit.");
     }
   }, [id, token, navigate]);
 
@@ -476,7 +399,6 @@ export default function BlogEdit() {
       setError(
         `${fileType.charAt(0).toUpperCase() + fileType.slice(1)} upload failed.`
       );
-      console.error(`Error uploading ${fileType}:`, err);
       return null;
     }
   };
@@ -505,7 +427,6 @@ export default function BlogEdit() {
         return null;
       }
     }
-
     try {
       const blogPostData = {
         ...formData,
@@ -521,7 +442,6 @@ export default function BlogEdit() {
       return data;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save the post.");
-      console.error("Error saving blog post:", err);
       return null;
     } finally {
       setSaving(false);
@@ -536,7 +456,6 @@ export default function BlogEdit() {
   };
 
   const handlePreview = () => {
-    // This function now correctly prepares data directly from current state
     const previewData = {
       blogPost: formData,
       contentBlocks: contentBlocks,
@@ -556,6 +475,42 @@ export default function BlogEdit() {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
+  // --- SEO KEYWORDS ---
+  const handleAddKeyword = () => {
+    if (
+      keywordInput.trim() &&
+      !(formData.seoKeywords || []).includes(keywordInput.trim())
+    ) {
+      setFormData({
+        ...formData,
+        seoKeywords: [...(formData.seoKeywords || []), keywordInput.trim()],
+      });
+      setKeywordInput("");
+    }
+  };
+  const handleDeleteKeyword = (keyword) => {
+    setFormData({
+      ...formData,
+      seoKeywords: (formData.seoKeywords || []).filter((k) => k !== keyword),
+    });
+  };
+  const handleAISuggestions = async () => {
+    setIsFetchingSuggestions(true);
+    setTimeout(() => {
+      setFormData((prev) => ({
+        ...prev,
+        seoTitle: prev.seoTitle || "Update Your Blog SEO Title",
+        seoDescription:
+          prev.seoDescription ||
+          "This is an example suggested SEO description for your blog. Use real AI for dynamic text.",
+        seoKeywords: prev.seoKeywords.length
+          ? prev.seoKeywords
+          : ["example", "seo", "keywords"],
+      }));
+      setIsFetchingSuggestions(false);
+    }, 1800);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
@@ -565,7 +520,7 @@ export default function BlogEdit() {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+    <Box sx={{ p: 3, maxWidth: "100vw", mx: "auto" }}>
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -618,18 +573,13 @@ export default function BlogEdit() {
               </Button>
             </Stack>
           </Box>
-
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
-
           <Grid container spacing={4}>
-            {/* Main Content Column */}
             <Grid xs={12} md={8}>
-              {" "}
-              {/* Removed 'item' prop as per MUI v2 guidelines */}
               <Stack spacing={3}>
                 <Paper
                   component={motion.div}
@@ -777,10 +727,7 @@ export default function BlogEdit() {
                 </Paper>
               </Stack>
             </Grid>
-            {/* Sidebar Column */}
             <Grid xs={12} md={4}>
-              {" "}
-              {/* Removed 'item' prop as per MUI v2 guidelines */}
               <Stack spacing={3}>
                 <Paper
                   component={motion.div}
@@ -922,58 +869,259 @@ export default function BlogEdit() {
                     </Box>
                   )}
                 </Paper>
-                <Accordion
+                {/* SEO Section */}
+                <Paper
                   component={motion.div}
                   variants={itemVariants}
-                  sx={{
-                    boxShadow: 2,
-                    borderRadius: 2,
-                    "&.Mui-expanded": { margin: 0, "&:before": { opacity: 0 } },
-                  }}
+                  elevation={2}
+                  sx={{ p: 3, borderRadius: 2 }}
                 >
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      fontFamily: "'Montserrat', sans-serif",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    SEO Settings
+                    <Tooltip
+                      title={
+                        <span>
+                          <b>SEO Title:</b> Main link shown on Google<br />
+                          <b>Description:</b> Summary for search results<br />
+                          <b>Best Practices:</b> Use keywords, keep title &lt; 60 chars, desc &lt; 160 chars
+                        </span>
+                      }
+                      arrow
+                    >
+                      <InfoOutlinedIcon color="primary" sx={{ fontSize: 20 }} />
+                    </Tooltip>
+                    {/* <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<SmartToyOutlinedIcon />}
+                      onClick={handleAISuggestions}
+                      disabled={isFetchingSuggestions}
                       sx={{
-                        fontFamily: "'Montserrat', sans-serif",
-                        fontWeight: 600,
+                        ml: "auto",
+                        fontWeight: 500,
+                        borderRadius: 4,
+                        minWidth: 0,
+                        px: 1.3,
                       }}
                     >
-                      SEO Settings
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Stack spacing={2}>
-                      <TextField
-                        label="SEO Title"
-                        name="seoTitle"
-                        value={formData.seoTitle}
-                        onChange={handleChange}
-                        fullWidth
-                        helperText={`${formData.seoTitle.length} / 60`}
-                        inputProps={{ maxLength: 60 }}
-                      />
-                      <TextField
-                        label="SEO Description"
-                        name="seoDescription"
-                        value={formData.seoDescription}
-                        onChange={handleChange}
-                        fullWidth
-                        multiline
-                        rows={3}
-                        helperText={`${formData.seoDescription.length} / 160`}
-                        inputProps={{ maxLength: 160 }}
-                      />
-                      <Divider sx={{ my: 1 }} />
-                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        SERP Preview:
+                      {isFetchingSuggestions ? "Loading..." : "AI Suggestions"}
+                    </Button> */}
+                  </Typography>
+                  <Accordion
+                    sx={{
+                      boxShadow: 2,
+                      borderRadius: 2,
+                      "&.Mui-expanded": { margin: 0, "&:before": { opacity: 0 } },
+                      mb: 0,
+                      background: "#fbf7fd",
+                    }}
+                    defaultExpanded
+                  >
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Typography
+                        sx={{
+                          fontFamily: "'Montserrat', sans-serif",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Optimize SEO
                       </Typography>
-                      <SERPPreview
-                        title={formData.seoTitle || formData.title}
-                        description={formData.seoDescription}
-                      />
-                    </Stack>
-                  </AccordionDetails>
-                </Accordion>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Stack spacing={2}>
+                        <TextField
+                          label="SEO Title"
+                          name="seoTitle"
+                          value={formData.seoTitle}
+                          onChange={handleChange}
+                          fullWidth
+                          helperText={
+                            <>
+                              <span
+                                style={{
+                                  color:
+                                    formData.seoTitle.length > 60
+                                      ? "#c62828"
+                                      : "#757575",
+                                }}
+                              >
+                                {formData.seoTitle.length} / 60
+                              </span>
+                              <span style={{ marginLeft: 8 }}>
+                                {formData.seoTitle.length > 60 && " Too long"}
+                              </span>
+                            </>
+                          }
+                          inputProps={{ maxLength: 70 }}
+                        />
+                        <TextField
+                          label="SEO Description"
+                          name="seoDescription"
+                          value={formData.seoDescription}
+                          onChange={handleChange}
+                          fullWidth
+                          multiline
+                          rows={3}
+                          helperText={
+                            <>
+                              <span
+                                style={{
+                                  color:
+                                    formData.seoDescription.length > 160
+                                      ? "#c62828"
+                                      : "#757575",
+                                }}
+                              >
+                                {formData.seoDescription.length} / 160
+                              </span>
+                              <span style={{ marginLeft: 8 }}>
+                                {formData.seoDescription.length > 160 &&
+                                  " Too long"}
+                              </span>
+                            </>
+                          }
+                          inputProps={{ maxLength: 180 }}
+                        />
+                        {/* Keyword UI */}
+                        <Stack spacing={1}>
+                          <TextField
+                            label="SEO Keyword"
+                            value={keywordInput}
+                            onChange={(e) => setKeywordInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddKeyword();
+                              }
+                            }}
+                            disabled={isFetchingSuggestions}
+                            helperText="Press enter or 'Add' to add multiple keywords"
+                            InputProps={{
+                              endAdornment: (
+                                <Button
+                                  size="small"
+                                  onClick={handleAddKeyword}
+                                  disabled={isFetchingSuggestions}
+                                >
+                                  Add
+                                </Button>
+                              ),
+                            }}
+                            fullWidth
+                          />
+                          <Box sx={{ mt: 0.5 }}>
+                            {(formData.seoKeywords || []).map((kw) => (
+                              <Chip
+                                key={kw}
+                                label={kw}
+                                onDelete={() => handleDeleteKeyword(kw)}
+                                color="secondary"
+                                sx={{
+                                  m: 0.3,
+                                  bgcolor: "rgba(186,104,200,0.08)",
+                                  color: "#6a1b9a",
+                                  fontWeight: 500,
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Stack>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 600,
+                            color: "#7b1fa2",
+                            mb: 1,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          SERP Preview
+                        </Typography>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            bgcolor: "#fff",
+                            borderRadius: 1,
+                            border: "1px solid #eee",
+                            maxWidth: 450,
+                            mb: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#1a0dab",
+                              fontSize: "20px",
+                              fontWeight: 700,
+                              textDecoration: "underline",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              mb: "-2px",
+                            }}
+                          >
+                            {formData.seoTitle ||
+                              formData.title ||
+                              "Your Blog Title Will Appear Here"}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#006621",
+                              fontSize: "14px",
+                              mb: "2px",
+                            }}
+                          >
+                            https://www.wetales.in/blog/your-slug
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#545454",
+                              fontSize: "15px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "-webkit-box",
+                              WebkitLineClamp: "2",
+                              WebkitBoxOrient: "vertical",
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {formData.seoDescription ||
+                              formData.excerpt ||
+                              "Your SEO description will appear here, giving a brief summary of your amazing article."}
+                          </Typography>
+                          {!!(formData.seoKeywords || []).length && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                display: "block",
+                                pt: 1,
+                                color: "#6a1b9a",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Keywords:{" "}
+                              {(formData.seoKeywords || []).join(", ")}
+                            </Typography>
+                          )}
+                        </Paper>
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
+                </Paper>
               </Stack>
             </Grid>
           </Grid>

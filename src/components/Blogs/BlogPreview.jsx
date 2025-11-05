@@ -5,9 +5,9 @@ import {
   Container,
   Chip,
   Stack,
-  CardMedia,
   Paper,
   Button,
+  Divider,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -62,6 +62,10 @@ const BlogContent = styled(Box)(({ theme }) => ({
     margin: theme.spacing(4, 0, 2),
   },
   "& p": { marginBottom: theme.spacing(2) },
+  "& ul, & ol": {
+    paddingLeft: theme.spacing(4),
+    marginBottom: theme.spacing(2),
+  },
   "& blockquote": {
     borderLeft: `4px solid #f3e5f5`,
     paddingLeft: theme.spacing(2),
@@ -76,6 +80,21 @@ const BlogContent = styled(Box)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius,
     margin: theme.spacing(3, "auto"),
     display: "block",
+  },
+  "& table": {
+    borderCollapse: "collapse",
+    width: "100%",
+    margin: theme.spacing(3, 0),
+  },
+  "& td, & th": {
+    border: "1px solid #ccc",
+    padding: theme.spacing(1),
+    textAlign: "left",
+  },
+  "& th": {
+    backgroundColor: "#f3e5f5",
+    color: "#4a148c",
+    fontWeight: 600,
   },
 }));
 
@@ -110,13 +129,11 @@ const renderContentBlock = (block, index) => {
       );
     case "paragraph":
       return (
-        <Typography
+        <Box
           key={index}
-          paragraph
-          sx={{ fontFamily: "'Montserrat', sans-serif", lineHeight: 1.8 }}
-        >
-          {value}
-        </Typography>
+          sx={{ my: 2 }}
+          dangerouslySetInnerHTML={{ __html: value }}
+        />
       );
     case "quote":
       return (
@@ -288,10 +305,7 @@ export default function BlogPreview() {
       {/* Hero Banner with Title */}
       <HeroBanner
         sx={{
-          // backgroundImage: `url(${heroImage})`,
-            backgroundImage: `linear-gradient(rgba(74, 20, 140, 0.6), rgba(236, 64, 122, 0.6)), url(${heroImage})`,
- 
-
+          backgroundImage: `linear-gradient(rgba(74, 20, 140, 0.6), rgba(236, 64, 122, 0.6)), url(${heroImage})`,
         }}
       >
         <HeroContent>
@@ -403,6 +417,183 @@ export default function BlogPreview() {
             </Stack>
           </Box>
         )}
+
+        {/* SEO Details Section */}
+        <Paper
+          sx={{
+            mt: 8,
+            p: { xs: 3, md: 4 },
+            borderTop: "2px dashed #ab47bc",
+            bgcolor: "#f8f5fb",
+            borderRadius: 2,
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 3,
+              fontWeight: 700,
+              color: "#6a1b9a",
+              fontFamily: "'Playfair Display', serif",
+            }}
+          >
+            SEO Details
+          </Typography>
+
+          <Stack spacing={3}>
+            {/* SEO Title */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1, fontWeight: 600, color: "#4a148c" }}
+              >
+                SEO Title
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  p: 1.5,
+                  bgcolor: "#fff",
+                  borderLeft: "3px solid #ab47bc",
+                  borderRadius: 1,
+                }}
+              >
+                {blogPost.seoTitle || blogPost.title || "[SEO Title]"}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
+                Length: {(blogPost.seoTitle || "").length} / 60 characters
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            {/* SEO Description */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1, fontWeight: 600, color: "#4a148c" }}
+              >
+                SEO Description
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  p: 1.5,
+                  bgcolor: "#fff",
+                  borderLeft: "3px solid #ab47bc",
+                  borderRadius: 1,
+                }}
+              >
+                {blogPost.seoDescription ||
+                  blogPost.excerpt ||
+                  "[SEO Description]"}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
+                Length: {(blogPost.seoDescription || "").length} / 160 characters
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            {/* SEO Keywords */}
+            {blogPost.seoKeywords && blogPost.seoKeywords.length > 0 && (
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, fontWeight: 600, color: "#4a148c" }}
+                >
+                  SEO Keywords
+                </Typography>
+                <Box
+                  sx={{
+                    p: 1.5,
+                    bgcolor: "#fff",
+                    borderLeft: "3px solid #ab47bc",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    {blogPost.seoKeywords.map((keyword, index) => (
+                      <Chip
+                        key={index}
+                        label={keyword}
+                        size="small"
+                        sx={{
+                          backgroundColor: "#ede7f6",
+                          color: "#6a1b9a",
+                          fontWeight: 500,
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+                <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
+                  Total Keywords: {blogPost.seoKeywords.length}
+                </Typography>
+              </Box>
+            )}
+
+            <Divider />
+
+            {/* SERP Preview */}
+            <Box>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 2, fontWeight: 600, color: "#4a148c" }}
+              >
+                SERP Preview (Google Search Result)
+              </Typography>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  bgcolor: "#fff",
+                  border: "1px solid #ddd",
+                  borderRadius: 1,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#1a0dab",
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    textDecoration: "underline",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    mb: "-2px",
+                  }}
+                >
+                  {blogPost.seoTitle || blogPost.title || "Blog Title"}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#006621", fontSize: "14px", mb: "2px" }}
+                >
+                  https://www.example.com/blog/[your-slug]
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#545454",
+                    fontSize: "15px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: "2",
+                    WebkitBoxOrient: "vertical",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {blogPost.seoDescription ||
+                    blogPost.excerpt ||
+                    "Your SEO description will appear here."}
+                </Typography>
+              </Paper>
+            </Box>
+          </Stack>
+        </Paper>
       </Container>
     </Box>
   );

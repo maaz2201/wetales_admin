@@ -24,8 +24,6 @@ import {
   MenuItem,
   Dialog,
   DialogContent,
-  DialogTitle,
-  DialogActions,
   Stack,
 } from "@mui/material";
 import {
@@ -44,7 +42,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
 
-// --- Environment Variables ---
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const SERVER_BASE_URL = import.meta.env.VITE_API_URL_SERVER;
 
@@ -89,10 +86,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
   },
 };
 
@@ -101,11 +95,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 12,
-    },
+    transition: { type: "spring", stiffness: 100, damping: 12 },
   },
   exit: {
     opacity: 0,
@@ -125,7 +115,6 @@ export default function BlogList() {
   const [previewBlog, setPreviewBlog] = useState(null);
   const token = localStorage.getItem("token");
 
-  // Debounce search term
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -133,12 +122,10 @@ export default function BlogList() {
     return () => clearTimeout(timerId);
   }, [searchTerm]);
 
-  // Fetch blogs on mount
   useEffect(() => {
     fetchBlogs();
   }, []);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, statusFilter]);
@@ -159,7 +146,6 @@ export default function BlogList() {
     }
   }
 
-  // Filter blogs based on search and status
   const filteredBlogs = useMemo(() => {
     const trimmedSearch = debouncedSearchTerm.trim().toLowerCase();
     return allBlogs
@@ -169,7 +155,6 @@ export default function BlogList() {
       );
   }, [allBlogs, debouncedSearchTerm, statusFilter]);
 
-  // Pagination
   const itemsPerPage = 6;
   const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage) || 1;
   const blogsOnPage = useMemo(() => {
@@ -196,7 +181,6 @@ export default function BlogList() {
   const getEmbedUrl = (url) => {
     if (!url) return null;
     let videoId = "";
-
     if (url.includes("youtube.com/watch?v=")) {
       videoId = url.split("v=")[1].split("&")[0];
       return `https://www.youtube.com/embed/${videoId}`;
@@ -224,9 +208,12 @@ export default function BlogList() {
           );
         case "paragraph":
           return (
-            <Typography key={index} className="block-paragraph">
-              {block.value}
-            </Typography>
+            <Box
+              key={index}
+              className="block-paragraph"
+              sx={{ my: 1.5 }}
+              dangerouslySetInnerHTML={{ __html: block.value }}
+            />
           );
         case "quote":
           return (
@@ -264,6 +251,9 @@ export default function BlogList() {
                 <video
                   src={`${SERVER_BASE_URL}${block.value.src}`}
                   controls
+                  autoPlay
+                  muted
+                  loop
                   className="block-video"
                 />
               </Box>
@@ -403,14 +393,12 @@ export default function BlogList() {
           </FormControl>
         </Paper>
 
-        {/* Error Alert */}
         {error && (
           <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
             {error}
           </Alert>
         )}
 
-        {/* Loading State */}
         {loading ? (
           <Box
             sx={{
@@ -424,7 +412,6 @@ export default function BlogList() {
           </Box>
         ) : (
           <>
-            {/* Blog Grid */}
             <AnimatePresence mode="wait">
               {blogsOnPage.length > 0 ? (
                 <Grid
@@ -436,6 +423,13 @@ export default function BlogList() {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    gap: "24px",
+                    alignItems: "stretch",
+                  }}
                 >
                   {blogsOnPage.map((blog) => (
                     <Grid
@@ -451,7 +445,7 @@ export default function BlogList() {
                       <Card
                         sx={{
                           height: "100%",
-                          width: "300px",
+                          width: "280px",
                           display: "flex",
                           flexDirection: "column",
                           borderRadius: 3,
@@ -546,8 +540,12 @@ export default function BlogList() {
                           >
                             <CalendarToday sx={{ fontSize: "0.9rem" }} />
                             <Typography
-                              variant="body2"
-                              sx={{ fontFamily: "'Montserrat', sans-serif" }}
+                              component="span"
+                              variant="caption"
+                              sx={{
+                                color: "#64748b",
+                                fontFamily: "'Inter', sans-serif",
+                              }}
                             >
                               {new Date(blog.createdAt).toLocaleDateString(
                                 "en-US",
@@ -555,6 +553,9 @@ export default function BlogList() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
                                 }
                               )}
                             </Typography>
@@ -707,7 +708,6 @@ export default function BlogList() {
               )}
             </AnimatePresence>
 
-            {/* Pagination */}
             {totalPages > 1 && blogsOnPage.length > 0 && (
               <Box
                 sx={{
@@ -741,101 +741,133 @@ export default function BlogList() {
         scroll="paper"
       >
         {previewBlog && (
-          <>
-            <DialogTitle
+          <DialogContent dividers sx={{ p: 0 }}>
+            {/* Hero Banner */}
+            <Box
               sx={{
-                fontFamily: "'Playfair Display', serif",
-                fontWeight: 700,
-                fontSize: "2rem",
-                color: "#4a148c",
-                pr: 6,
+                minHeight: 250,
+                width: "100%",
+                background: `linear-gradient(rgba(74, 20, 140, 0.65), rgba(248, 158, 188, 0.35)), url(${
+                  previewBlog.featuredImage
+                    ? SERVER_BASE_URL + previewBlog.featuredImage
+                    : "https://placehold.co/1600x500/faf6fd/ab47bc?text=No+Hero"
+                })`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                color: "#fff",
               }}
             >
-              {previewBlog.title}
+              <Box
+                sx={{
+                  p: { xs: 3, md: 6 },
+                  zIndex: 2,
+                  textAlign: "center",
+                  width: "100%",
+                }}
+              >
+                {previewBlog.category && (
+                  <Chip
+                    label={previewBlog.category}
+                    sx={{
+                      background: "rgba(255,255,255,0.12)",
+                      color: "#fff",
+                      fontWeight: 600,
+                      mb: 2,
+                    }}
+                  />
+                )}
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    textShadow: "2px 2px 6px rgba(0,0,0,0.3)",
+                    mb: 2,
+                  }}
+                >
+                  {previewBlog.title}
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ justifyContent: "center", color: "#efe4fb" }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <PersonIcon fontSize="small" />
+                    <Typography variant="body2">
+                      {previewBlog.author?.name || "Admin"}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CalendarToday fontSize="small" />
+                    <Typography variant="body2">
+                      {new Date(previewBlog.createdAt).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={previewBlog.status}
+                    size="small"
+                    sx={{
+                      textTransform: "capitalize",
+                      color: "#fff",
+                      bgcolor: "rgba(30,20,60,0.27)",
+                    }}
+                  />
+                </Stack>
+              </Box>
               <IconButton
                 onClick={() => setPreviewBlog(null)}
                 sx={{
                   position: "absolute",
-                  right: 8,
-                  top: 8,
-                  color: "grey.500",
+                  right: 12,
+                  top: 12,
+                  color: "#fff",
                 }}
               >
                 <Close />
               </IconButton>
-            </DialogTitle>
+            </Box>
 
-            <DialogContent dividers>
-              <Stack
-                direction="row"
-                spacing={3}
+            {previewBlog.excerpt && (
+              <Typography
+                variant="subtitle1"
                 sx={{
-                  mb: 3,
-                  flexWrap: "wrap",
-                  gap: 2,
+                  fontStyle: "italic",
                   color: "text.secondary",
+                  mb: 3,
+                  pb: 2,
+                  px: 3,
+                  borderBottom: "1px solid #ece0f1",
+                  background: "#fff",
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <PersonIcon fontSize="small" />
-                  <Typography variant="body2">
-                    {previewBlog.author?.name || "Admin"}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <CalendarToday fontSize="small" />
-                  <Typography variant="body2">
-                    {new Date(previewBlog.createdAt).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
-                  </Typography>
-                </Box>
-                <Chip
-                  label={previewBlog.status}
-                  size="small"
-                  sx={{ textTransform: "capitalize" }}
-                />
-              </Stack>
+                {previewBlog.excerpt}
+              </Typography>
+            )}
 
-              {previewBlog.featuredImage && (
-                <CardMedia
-                  component="img"
-                  image={`${SERVER_BASE_URL}${previewBlog.featuredImage}`}
-                  alt={previewBlog.title}
-                  sx={{
-                    borderRadius: 2,
-                    mb: 3,
-                    maxHeight: 400,
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-
-              {previewBlog.excerpt && (
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontStyle: "italic",
-                    color: "text.secondary",
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                  }}
-                >
-                  {previewBlog.excerpt}
-                </Typography>
-              )}
-
+            <Box
+              sx={{
+                maxWidth: 800,
+                mx: "auto",
+                bgcolor: "#fff",
+                p: { xs: 2, md: 5 },
+                borderRadius: 4,
+              }}
+            >
               <BlogPreviewContent>
                 {renderContentBlocks(previewBlog.contentBlocks)}
               </BlogPreviewContent>
-
               {previewBlog.tags && previewBlog.tags.length > 0 && (
                 <Box
                   sx={{
@@ -866,23 +898,154 @@ export default function BlogList() {
                   </Box>
                 </Box>
               )}
-            </DialogContent>
+            </Box>
 
-            <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={() => setPreviewBlog(null)}>Close</Button>
-              <Button
-                component={Link}
-                to={`/admin/blogs/edit/${previewBlog._id}`}
-                variant="contained"
-                startIcon={<Edit />}
+            {/* SEO Section */}
+            <Box
+              sx={{
+                bgcolor: "#f6f3fa",
+                mt: 4,
+                px: { xs: 2, md: 6 },
+                py: 4,
+                borderTop: "1px dashed #e1bee7",
+                borderBottomLeftRadius: 10,
+                borderBottomRightRadius: 10,
+              }}
+            >
+              <Typography
+                variant="subtitle1"
                 sx={{
-                  background: "linear-gradient(45deg, #ec407a, #ab47bc)",
+                  mb: 1.5,
+                  fontWeight: 700,
+                  color: "#6a1b9a",
                 }}
               >
-                Edit Post
-              </Button>
-            </DialogActions>
-          </>
+                SEO Details
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={4}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                    <b>SEO Title:</b>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {previewBlog.seoTitle || previewBlog.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                    <b>Description:</b>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {previewBlog.seoDescription || previewBlog.excerpt}
+                  </Typography>
+                  {previewBlog.seoKeywords &&
+                    previewBlog.seoKeywords.length > 0 && (
+                      <>
+                        <Typography variant="body2" sx={{ opacity: 0.7 }}>
+                          <b>Keywords:</b>
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mb: 1,
+                          }}
+                        >
+                          {previewBlog.seoKeywords.map((kw, i) => (
+                            <Chip
+                              key={i}
+                              label={kw}
+                              size="small"
+                              sx={{ bgcolor: "#ede7f6", color: "#6a1b9a" }}
+                            />
+                          ))}
+                        </Box>
+                      </>
+                    )}
+                </Box>
+                <Box
+                  sx={{
+                    borderLeft: { sm: "1.5px dashed #b39ddb" },
+                    pl: { sm: 4 },
+                    mt: { xs: 3, sm: 0 },
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ fontWeight: 700, mb: 0.5 }}
+                  >
+                    SERP Preview
+                  </Typography>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 1,
+                      mt: 1,
+                      p: 2,
+                      bgcolor: "#fff",
+                      minWidth: 320,
+                      maxWidth: 400,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#1a0dab",
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        mb: "-2px",
+                      }}
+                    >
+                      {previewBlog.seoTitle ||
+                        previewBlog.title ||
+                        "Blog Title"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#006621", fontSize: "14px", mb: "2px" }}
+                    >
+                      https://www.example.com/blog/
+                      {previewBlog.slug || "[your-slug]"}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#545454",
+                        fontSize: "15px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: "2",
+                        WebkitBoxOrient: "vertical",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {previewBlog.seoDescription ||
+                        previewBlog.excerpt ||
+                        "SEO description will appear here, giving a brief summary of your article."}
+                    </Typography>
+                    {previewBlog.seoKeywords &&
+                      previewBlog.seoKeywords.length > 0 && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: "block",
+                            pt: 1,
+                            color: "#6a1b9a",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Keywords: {previewBlog.seoKeywords.join(", ")}
+                        </Typography>
+                      )}
+                  </Paper>
+                </Box>
+              </Stack>
+            </Box>
+          </DialogContent>
         )}
       </Dialog>
     </Box>
